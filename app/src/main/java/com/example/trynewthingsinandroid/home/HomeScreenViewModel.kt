@@ -7,11 +7,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
+/**
+ * ViewModel for the Home Screen, responsible for loading wallpapers from Remote Config.
+ */
 class HomeScreenViewModel : ViewModel() {
 
     private val remoteConfigManager = RemoteConfigManager()
 
     private val _uiState = MutableStateFlow(HomeScreenUIState())
+    
+    /**
+     * The observable UI state for the Home Screen.
+     */
     val uiState: StateFlow<HomeScreenUIState> = _uiState.asStateFlow()
 
     init {

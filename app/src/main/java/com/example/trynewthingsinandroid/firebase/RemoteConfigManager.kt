@@ -8,6 +8,9 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import timber.log.Timber
 
+/**
+ * Manages Firebase Remote Config operations, including fetching and activating values.
+ */
 class RemoteConfigManager {
 
     private val remoteConfig: FirebaseRemoteConfig = FirebaseRemoteConfig.getInstance()
@@ -21,6 +24,11 @@ class RemoteConfigManager {
         remoteConfig.setDefaultsAsync(R.xml.remote_config_defaults)
     }
 
+    /**
+     * Fetches and activates the latest remote config values.
+     *
+     * @param onComplete Callback invoked when the fetch operation completes.
+     */
     fun fetchAndActivate(onComplete: (Boolean) -> Unit) {
         remoteConfig.fetchAndActivate()
             .addOnCompleteListener { task ->
@@ -28,6 +36,11 @@ class RemoteConfigManager {
             }
     }
 
+    /**
+     * Retrieves the list of wallpapers from Remote Config.
+     *
+     * @return A list of [ImageUIState] parsed from the "home_wallpapers" key.
+     */
     fun getHomeWallpapers(): List<ImageUIState> {
         val json = remoteConfig.getString("home_wallpapers")
         return try {

@@ -18,6 +18,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+/**
+ * Screen displaying details for a specific image.
+ *
+ * @param onBackClick Callback invoked when the user clicks the back button.
+ * @param viewModel The ViewModel providing the state for this screen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageDetailScreen(

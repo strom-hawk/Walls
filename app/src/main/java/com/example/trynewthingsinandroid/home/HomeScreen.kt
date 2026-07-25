@@ -34,6 +34,13 @@ import com.example.trynewthingsinandroid.R
 import com.example.trynewthingsinandroid.data.ImageUIState
 import com.example.trynewthingsinandroid.ui.theme.TryNewThingsInAndroidTheme
 
+/**
+ * The main screen of the application displaying a grid of wallpapers.
+ *
+ * @param modifier The modifier to be applied to the layout.
+ * @param viewModel The ViewModel providing the state for this screen.
+ * @param onImageClick Callback invoked when an image is clicked.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -78,6 +85,12 @@ fun HomeScreen(
     }
 }
 
+/**
+ * A single image card item in the gallery.
+ *
+ * @param image The image state to display.
+ * @param onClick Callback invoked when the card is clicked.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageUI(

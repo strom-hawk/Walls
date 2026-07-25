@@ -10,14 +10,15 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.trynewthingsinandroid.imagedetail.ImageDetailScreen
 import com.example.trynewthingsinandroid.home.HomeScreen
+import com.example.trynewthingsinandroid.utils.Constants
 
-sealed class Screen(val route: String) {
-    object Home : Screen("home")
-    object Detail : Screen("detail/{imageId}") {
-        fun createRoute(imageId: String) = "detail/$imageId"
-    }
-}
-
+/**
+ * The main navigation host for the application.
+ *
+ * @param modifier The modifier to be applied to the NavHost.
+ * @param navController The navigation controller to manage app navigation.
+ * @param startDestination The initial destination of the navigation graph.
+ */
 @Composable
 fun AppNavHost(
     modifier: Modifier = Modifier,
@@ -38,7 +39,7 @@ fun AppNavHost(
         }
         composable(
             route = Screen.Detail.route,
-            arguments = listOf(navArgument("imageId") { type = NavType.StringType })
+            arguments = listOf(navArgument(Constants.IMAGE_ID) { type = NavType.StringType })
         ) {
             ImageDetailScreen(
                 onBackClick = {
