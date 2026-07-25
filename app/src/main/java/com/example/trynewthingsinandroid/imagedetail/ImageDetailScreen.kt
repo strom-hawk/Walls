@@ -12,14 +12,20 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageDetailScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    viewModel: ImageDetailsViewModel = viewModel()
 ) {
+    val selectedImage by viewModel.selectedImage.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -41,7 +47,7 @@ fun ImageDetailScreen(
                 .padding(paddingValues),
             contentAlignment = Alignment.Center
         ) {
-            Text("Detail Screen Placeholder")
+            Text(text = "Detail for Image ID: ${selectedImage?.id ?: "Loading..."}")
         }
     }
 }

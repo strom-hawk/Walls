@@ -41,7 +41,7 @@ fun HomeScreen(
     viewModel: HomeScreenViewModel = HomeScreenViewModel(),
     onImageClick: (String) -> Unit = {}
 ) {
-    val images by viewModel.imageList.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -67,10 +67,10 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(images) { image ->
+                items(uiState.images) { image ->
                     ImageUI(
                         image = image,
-                        onClick = { onImageClick(image.url) }
+                        onClick = { onImageClick(image.id) }
                     )
                 }
             }
