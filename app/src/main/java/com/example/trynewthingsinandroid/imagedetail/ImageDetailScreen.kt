@@ -1,5 +1,6 @@
 package com.example.trynewthingsinandroid.imagedetail
 
+import android.app.Activity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -23,14 +24,20 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 
@@ -47,48 +54,69 @@ fun ImageDetailScreen(
     viewModel: ImageDetailsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val view = LocalView.current
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    // Toggle System Bars visibility based on full screen state
+    LaunchedEffect(uiState.isImageFullScreen) {
+        val window = (view.context as? Activity)?.window ?: return@LaunchedEffect
+        val controller = WindowCompat.getInsetsController(window, view)
+        
+        if (uiState.isImageFullScreen) {
+            // Show UI - Show System Bars
+            controller.show(WindowInsetsCompat.Type.systemBars())
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
+        } else {
+            // Hide UI - Hide System Bars (Immersive)
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                viewModel.onUIEvent(ImageDetailsScreenUIEvent.OnImageClicked)
+            }
+    ) {
         AsyncImage(
             model = uiState.selectedImage?.url,
             contentDescription = "Wallpaper Detail",
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    viewModel.onUIEvent(ImageDetailsScreenUIEvent.OnImageClicked)
-                },
+            modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
-        Scaffold(
-            containerColor = Color.Transparent,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "Image Detail",
-                            color = Color.White
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White
+        if (uiState.isImageFullScreen) {
+            Scaffold(
+                containerColor = Color.Transparent,
+                topBar = {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = "Image Detail",
+                                color = Color.White
                             )
-                        }
-                    },
-                    colors = TopAppBarDefaults.smallTopAppBarColors(
-                        containerColor = Color.Transparent
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = onBackClick) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.White
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent
+                        )
                     )
-                )
+                }
+            ) { paddingValues: PaddingValues ->
+                Box(modifier = Modifier.padding(paddingValues))
             }
-        ) { paddingValues: PaddingValues ->
-            Box(modifier = Modifier.padding(paddingValues))
         }
 
         ImageDetailsBottomSheetUI(
@@ -111,12 +139,15 @@ fun ImageDetailsBottomSheetUI(
     onEvent: (ImageDetailsScreenUIEvent) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
 
     if (activeBottomSheet == ImageDetailsScreenBottomSheet.Options) {
         ModalBottomSheet(
-            onDismissRequest = { onEvent(ImageDetailsScreenUIEvent.DismissBottomSheet) },
+            onDismissRequest = { 
+                onEvent(ImageDetailsScreenUIEvent.DismissBottomSheet) 
+            },
             sheetState = sheetState,
-            containerColor = Color.Transparent,
+            containerColor = Color.Black.copy(alpha = 0.4f),
             dragHandle = null,
             scrimColor = Color.Transparent
         ) {

@@ -9,10 +9,12 @@ import com.example.trynewthingsinandroid.data.ImageUIState
  *
  * @property selectedImage The image to be displayed in detail.
  * @property activeBottomSheet The currently active bottom sheet.
+ * @property isImageFullScreen Whether the image is in full-screen mode (UI hidden).
  */
 @Keep
 @Stable
 data class ImageDetailsScreenUIState(
     val selectedImage: ImageUIState? = null,
-    val activeBottomSheet: ImageDetailsScreenBottomSheet = ImageDetailsScreenBottomSheet.None
+    val activeBottomSheet: ImageDetailsScreenBottomSheet = ImageDetailsScreenBottomSheet.None,
+    val isImageFullScreen: Boolean = true
 )

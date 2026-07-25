@@ -45,19 +45,20 @@ class ImageDetailsViewModel(
             }
             is ImageDetailsScreenUIEvent.OnImageClicked -> {
                 _uiState.update { 
-                    val nextSheet = if (it.activeBottomSheet == ImageDetailsScreenBottomSheet.Options) {
-                        ImageDetailsScreenBottomSheet.None
-                    } else {
-                        ImageDetailsScreenBottomSheet.Options
-                    }
-
-                    println("_____________ nextSheet: $nextSheet")
-                    println("_____________ it.activeBottomSheet: ${it.activeBottomSheet}")
-                    it.copy(activeBottomSheet = nextSheet)
+                    val newFullScreen = it.isImageFullScreen.not()
+                    it.copy(
+                        isImageFullScreen = newFullScreen,
+                        activeBottomSheet = if (newFullScreen) ImageDetailsScreenBottomSheet.Options else ImageDetailsScreenBottomSheet.None
+                    )
                 }
             }
             is ImageDetailsScreenUIEvent.DismissBottomSheet -> {
-                _uiState.update { it.copy(activeBottomSheet = ImageDetailsScreenBottomSheet.None) }
+                _uiState.update { 
+                    it.copy(
+                        activeBottomSheet = ImageDetailsScreenBottomSheet.None,
+                        isImageFullScreen = false
+                    )
+                }
             }
         }
     }
