@@ -53,7 +53,12 @@ class ImageDetailsViewModel(
                 }
             }
             is ImageDetailsScreenUIEvent.OnDownloadClicked -> {
-                Timber.d("___________ Download clicked")
+                _uiState.value.selectedImage?.let { image ->
+                    viewModelScope.launch {
+                        val fileName = "wallpaper_${image.id}.jpg"
+                        _uiEffect.emit(ImageDetailsScreenUIEffect.DownloadImage(image.url, fileName))
+                    }
+                }
             }
             is ImageDetailsScreenUIEvent.OnImageClicked -> {
                 _uiState.update { 

@@ -1,7 +1,10 @@
 package com.example.trynewthingsinandroid.imagedetail
 
 import android.app.Activity
+import android.app.DownloadManager
+import android.content.Context
 import android.content.Intent
+import android.os.Environment
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -41,6 +44,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import androidx.core.net.toUri
 
 /**
  * Screen displaying details for a specific image.
@@ -70,6 +74,18 @@ fun ImageDetailScreen(
                     }
                     val shareIntent = Intent.createChooser(sendIntent, null)
                     context.startActivity(shareIntent)
+                }
+                is ImageDetailsScreenUIEffect.DownloadImage -> {
+                    val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                    val request = DownloadManager.Request(effect.url.toUri()).apply {
+                        setTitle(effect.fileName)
+                        setDescription("Downloading wallpaper...")
+                        setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                        setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, effect.fileName)
+                        setAllowedOverMetered(true)
+                        setAllowedOverRoaming(true)
+                    }
+                    downloadManager.enqueue(request)
                 }
             }
         }
