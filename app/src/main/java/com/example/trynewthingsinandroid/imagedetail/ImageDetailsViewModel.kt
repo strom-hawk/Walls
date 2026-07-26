@@ -2,12 +2,17 @@ package com.example.trynewthingsinandroid.imagedetail
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.trynewthingsinandroid.firebase.RemoteConfigManager
 import com.example.trynewthingsinandroid.utils.Constants
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -25,6 +30,9 @@ class ImageDetailsViewModel(
     private val _uiState = MutableStateFlow(ImageDetailsScreenUIState())
     val uiState: StateFlow<ImageDetailsScreenUIState> = _uiState.asStateFlow()
 
+    private val _uiEffect = MutableSharedFlow<ImageDetailsScreenUIEffect>()
+    val uiEffect: SharedFlow<ImageDetailsScreenUIEffect> = _uiEffect.asSharedFlow()
+
     init {
         Timber.d("ImageDetailsViewModel init with id: $imageId")
         initialiseView()
@@ -38,17 +46,21 @@ class ImageDetailsViewModel(
     fun onUIEvent(event: ImageDetailsScreenUIEvent) {
         when (event) {
             is ImageDetailsScreenUIEvent.OnShareClicked -> {
-                Timber.d("___________ Share clicked")
+                _uiState.value.selectedImage?.url?.let { url ->
+                    viewModelScope.launch {
+                        _uiEffect.emit(ImageDetailsScreenUIEffect.ShareImageUrl(url))
+                    }
+                }
             }
             is ImageDetailsScreenUIEvent.OnDownloadClicked -> {
                 Timber.d("___________ Download clicked")
             }
             is ImageDetailsScreenUIEvent.OnImageClicked -> {
                 _uiState.update { 
-                    val newFullScreen = it.isImageFullScreen.not()
+                    val nextFullScreen = !it.isImageFullScreen
                     it.copy(
-                        isImageFullScreen = newFullScreen,
-                        activeBottomSheet = if (newFullScreen) ImageDetailsScreenBottomSheet.Options else ImageDetailsScreenBottomSheet.None
+                        isImageFullScreen = nextFullScreen,
+                        activeBottomSheet = if (nextFullScreen) ImageDetailsScreenBottomSheet.Options else ImageDetailsScreenBottomSheet.None
                     )
                 }
             }
@@ -73,7 +85,8 @@ class ImageDetailsViewModel(
             _uiState.update { 
                 it.copy(
                     selectedImage = image,
-                    activeBottomSheet = ImageDetailsScreenBottomSheet.Options
+                    activeBottomSheet = ImageDetailsScreenBottomSheet.Options,
+                    isImageFullScreen = true
                 )
             }
         }

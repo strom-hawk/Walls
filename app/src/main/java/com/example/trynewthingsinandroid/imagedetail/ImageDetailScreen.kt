@@ -1,6 +1,7 @@
 package com.example.trynewthingsinandroid.imagedetail
 
 import android.app.Activity
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -28,11 +29,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
@@ -54,7 +55,25 @@ fun ImageDetailScreen(
     viewModel: ImageDetailsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     val view = LocalView.current
+
+    // Collect and handle UI effects (one-time events like sharing)
+    LaunchedEffect(Unit) {
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                is ImageDetailsScreenUIEffect.ShareImageUrl -> {
+                    val sendIntent: Intent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, "Check out this wallpaper: ${effect.url}")
+                        type = "text/plain"
+                    }
+                    val shareIntent = Intent.createChooser(sendIntent, null)
+                    context.startActivity(shareIntent)
+                }
+            }
+        }
+    }
 
     // Toggle System Bars visibility based on full screen state
     LaunchedEffect(uiState.isImageFullScreen) {
@@ -62,11 +81,9 @@ fun ImageDetailScreen(
         val controller = WindowCompat.getInsetsController(window, view)
         
         if (uiState.isImageFullScreen) {
-            // Show UI - Show System Bars
             controller.show(WindowInsetsCompat.Type.systemBars())
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
         } else {
-            // Hide UI - Hide System Bars (Immersive)
             controller.hide(WindowInsetsCompat.Type.systemBars())
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
@@ -117,12 +134,12 @@ fun ImageDetailScreen(
             ) { paddingValues: PaddingValues ->
                 Box(modifier = Modifier.padding(paddingValues))
             }
-        }
 
-        ImageDetailsBottomSheetUI(
-            activeBottomSheet = uiState.activeBottomSheet,
-            onEvent = viewModel::onUIEvent
-        )
+            ImageDetailsBottomSheetUI(
+                activeBottomSheet = uiState.activeBottomSheet,
+                onEvent = viewModel::onUIEvent
+            )
+        }
     }
 }
 
@@ -139,7 +156,6 @@ fun ImageDetailsBottomSheetUI(
     onEvent: (ImageDetailsScreenUIEvent) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
 
     if (activeBottomSheet == ImageDetailsScreenBottomSheet.Options) {
         ModalBottomSheet(
