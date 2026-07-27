@@ -8,10 +8,23 @@ import androidx.compose.runtime.Stable
  *
  * @property id The unique identifier of the image.
  * @property url The remote URL of the image.
+ * @property photoCredit The credit information for the photographer.
  */
 @Keep
 @Stable
 data class ImageUIState(
     val id: String,
-    val url: String
+    val url: String,
+    val photoCredit: PhotoCredit? = null
+)
+
+/**
+ * Data class representing photo credit information.
+ *
+ * @property name The name of the photographer.
+ */
+@Keep
+@Stable
+data class PhotoCredit(
+    val name: String
 )
