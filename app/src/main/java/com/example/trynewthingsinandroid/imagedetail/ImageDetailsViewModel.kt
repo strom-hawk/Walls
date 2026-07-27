@@ -83,7 +83,7 @@ class ImageDetailsViewModel(
     /**
      * Initializes the view state by fetching the selected image and setting the initial bottom sheet.
      */
-    fun initialiseView() {
+    private fun initialiseView() {
         imageId?.let { id ->
             val images = remoteConfigManager.getHomeWallpapers()
             val image = images.find { it.id == id }

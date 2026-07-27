@@ -1,18 +1,21 @@
 package com.example.trynewthingsinandroid.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -21,6 +24,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -28,7 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.example.trynewthingsinandroid.R
 import com.example.trynewthingsinandroid.data.ImageUIState
@@ -77,7 +81,8 @@ fun HomeScreen(
                 items(uiState.images) { image ->
                     ImageUI(
                         image = image,
-                        onClick = { onImageClick(image.id.orEmpty()) }
+                        onClick = { onImageClick(image.id.orEmpty()) },
+                        onLoadError = { viewModel.onUIEvent(HomeScreenUIEvent.RemoveImage(image.id.orEmpty())) }
                     )
                 }
             }
@@ -93,9 +98,10 @@ fun HomeScreen(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImageUI(
+private fun ImageUI(
     image: ImageUIState,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    onLoadError: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -107,14 +113,33 @@ fun ImageUI(
         ),
         onClick = onClick
     ) {
-        AsyncImage(
+        SubcomposeAsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(image.url)
                 .crossfade(true)
                 .build(),
-            contentDescription = "Wallpaper Image",
+            contentDescription = stringResource(R.string.wallpaper_image_content_description),
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
+            loading = { ImageLoadingIndicatorUI() },
+            onError = { onLoadError() }
+        )
+    }
+}
+
+/**
+ * Centered loading indicator for images.
+ */
+@Composable
+private fun ImageLoadingIndicatorUI() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(24.dp),
+            strokeWidth = 2.dp,
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }
