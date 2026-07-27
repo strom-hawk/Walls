@@ -77,7 +77,7 @@ fun HomeScreen(
                 items(uiState.images) { image ->
                     ImageUI(
                         image = image,
-                        onClick = { onImageClick(image.id) }
+                        onClick = { onImageClick(image.id.orEmpty()) }
                     )
                 }
             }

@@ -1,10 +1,6 @@
 package com.example.trynewthingsinandroid.imagedetail
 
 import android.app.Activity
-import android.app.DownloadManager
-import android.content.Context
-import android.content.Intent
-import android.os.Environment
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -42,13 +38,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.trynewthingsinandroid.R
+import com.example.trynewthingsinandroid.data.PhotoCredit
+import com.example.trynewthingsinandroid.utils.downloadImage
+import com.example.trynewthingsinandroid.utils.shareImage
 
 /**
  * Screen displaying details for a specific image.
@@ -123,16 +121,15 @@ fun ImageDetailScreen(
                     viewModel.onUIEvent(ImageDetailsScreenUIEvent.OnImageClicked)
                 }
         ) {
-            AsyncImage(
-                model = uiState.selectedImage?.url,
-                contentDescription = "Wallpaper Detail",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
+            BackgroundImageUI(url = uiState.selectedImage?.url)
 
             if (uiState.isImageFullScreen) {
                 Column {
                     TopAppBar(
+                        modifier = Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { /* Consume click to prevent toggle */ },
                         title = {
                             Text(
                                 text = stringResource(R.string.image_detail_title),
@@ -140,7 +137,15 @@ fun ImageDetailScreen(
                             )
                         },
                         navigationIcon = {
-                            IconButton(onClick = onBackClick) {
+                            IconButton(
+                                onClick = onBackClick,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .background(
+                                        color = Color.Black.copy(alpha = 0.4f),
+                                        shape = RoundedCornerShape(50)
+                                    )
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.ArrowBack,
                                     contentDescription = "Back",
@@ -153,27 +158,52 @@ fun ImageDetailScreen(
                         )
                     )
 
-                    uiState.selectedImage?.photoCredit?.let { credit ->
-                        Text(
-                            text = stringResource(R.string.photo_credit_label, credit.name),
-                            modifier = Modifier
-                                .padding(start = 16.dp)
-                                .background(
-                                    color = Color.Black.copy(alpha = 0.4f),
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) { /* Consume click to prevent toggle */ },
-                            color = Color.White,
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
+                    PhotoCreditUI(photoCredit = uiState.selectedImage?.photoCredit)
                 }
             }
         }
+    }
+}
+
+/**
+ * Composable representing the main background image.
+ *
+ * @param url The URL of the image to display.
+ */
+@Composable
+fun BackgroundImageUI(url: String?) {
+    AsyncImage(
+        model = url,
+        contentDescription = stringResource(R.string.wallpaper_detail_content_description),
+        modifier = Modifier.fillMaxSize(),
+        contentScale = ContentScale.Crop
+    )
+}
+
+/**
+ * Composable representing the photographer's credit.
+ *
+ * @param photoCredit The photo credit information to display.
+ */
+@Composable
+fun PhotoCreditUI(photoCredit: PhotoCredit?) {
+    photoCredit?.name?.let { name ->
+        Text(
+            text = name,
+            modifier = Modifier
+                .padding(start = 16.dp, top = 16.dp)
+                .background(
+                    color = Color.Black.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { /* Consume click to prevent toggle */ },
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium
+        )
     }
 }
 
@@ -210,34 +240,4 @@ fun OptionsBottomSheet(
             )
         }
     }
-}
-
-private fun shareImage(
-    url: String,
-    context: Context
-) {
-    val sendIntent: Intent = Intent().apply {
-        action = Intent.ACTION_SEND
-        putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_message_template, url))
-        type = "text/plain"
-    }
-    val shareIntent = Intent.createChooser(sendIntent, null)
-    context.startActivity(shareIntent)
-}
-
-private fun downloadImage(
-    url: String,
-    fileName: String,
-    context: Context
-) {
-    val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-    val request = DownloadManager.Request(url.toUri()).apply {
-        setTitle(fileName)
-        setDescription(context.getString(R.string.downloading_wallpaper_message))
-        setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-        setAllowedOverMetered(true)
-        setAllowedOverRoaming(true)
-    }
-    downloadManager.enqueue(request)
 }

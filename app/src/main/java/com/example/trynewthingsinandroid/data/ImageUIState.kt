@@ -13,8 +13,8 @@ import androidx.compose.runtime.Stable
 @Keep
 @Stable
 data class ImageUIState(
-    val id: String,
-    val url: String,
+    val id: String? = null,
+    val url: String? = null,
     val photoCredit: PhotoCredit? = null
 )
 
@@ -26,5 +26,5 @@ data class ImageUIState(
 @Keep
 @Stable
 data class PhotoCredit(
-    val name: String
+    val name: String? = null
 )
