@@ -15,7 +15,9 @@
     <string name="downloading_wallpaper_message">Downloading wallpaper…</string>
     <string name="photo_credit_label">Photo by %s</string>
     <string name="set_as_wallpaper">Set as Wallpaper</string>
+    <string name="set_as_lock_screen">Set as Lock Screen</string>
     <string name="wallpaper_set_success">Wallpaper Updated!</string>
+    <string name="lock_screen_set_success">Lock Screen Updated!</string>
     <string name="wallpaper_set_failure">Failed to update wallpaper.</string>
 
     <!-- Common -->

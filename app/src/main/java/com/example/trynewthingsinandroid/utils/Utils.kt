@@ -70,14 +70,16 @@ fun downloadImage(
 }
 
 /**
- * Fetches an image from a URL and sets it as the device wallpaper.
+ * Fetches an image from a URL and sets it as the device wallpaper or lock screen.
  *
  * @param url The image URL.
  * @param context The context used for Coil and WallpaperManager.
+ * @param which The flags indicating whether to set the system wallpaper, lock screen, or both.
  */
 suspend fun setAsWallpaper(
     url: String,
-    context: Context
+    context: Context,
+    which: Int = WallpaperManager.FLAG_SYSTEM
 ) {
     withContext(Dispatchers.IO) {
         val loader = ImageLoader(context)
@@ -92,9 +94,16 @@ suspend fun setAsWallpaper(
             if (bitmap != null) {
                 try {
                     val wallpaperManager = WallpaperManager.getInstance(context)
-                    wallpaperManager.setBitmap(bitmap)
+                    wallpaperManager.setBitmap(bitmap, null, true, which)
+                    
+                    val successMessageRes = if (which == WallpaperManager.FLAG_LOCK) {
+                        R.string.lock_screen_set_success
+                    } else {
+                        R.string.wallpaper_set_success
+                    }
+
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, context.getString(R.string.wallpaper_set_success), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(successMessageRes), Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
                     Timber.e(e, "Error setting wallpaper")

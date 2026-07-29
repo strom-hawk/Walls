@@ -28,4 +28,11 @@ sealed class ImageDetailsScreenUIEffect {
      * @property url The image URL to be set as wallpaper.
      */
     data class SetAsWallpaper(val url: String) : ImageDetailsScreenUIEffect()
+
+    /**
+     * Effect to set an image as the device lock screen.
+     *
+     * @property url The image URL to be set as lock screen.
+     */
+    data class SetAsLockScreen(val url: String) : ImageDetailsScreenUIEffect()
 }

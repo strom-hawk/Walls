@@ -67,6 +67,13 @@ class ImageDetailsViewModel(
                     }
                 }
             }
+            is ImageDetailsScreenUIEvent.OnSetAsLockScreenClicked -> {
+                _uiState.value.selectedImage?.url?.let { url ->
+                    viewModelScope.launch {
+                        _uiEffect.emit(ImageDetailsScreenUIEffect.SetAsLockScreen(url))
+                    }
+                }
+            }
             is ImageDetailsScreenUIEvent.OnImageClicked -> {
                 _uiState.update { 
                     val nextFullScreen = !it.isImageFullScreen

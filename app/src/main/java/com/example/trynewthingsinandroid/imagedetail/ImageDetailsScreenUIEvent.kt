@@ -31,4 +31,9 @@ sealed class ImageDetailsScreenUIEvent {
      * Event triggered when the user clicks the "Set as Wallpaper" button.
      */
     data object OnSetAsWallpaperClicked : ImageDetailsScreenUIEvent()
+
+    /**
+     * Event triggered when the user clicks the "Set as Lock Screen" button.
+     */
+    data object OnSetAsLockScreenClicked : ImageDetailsScreenUIEvent()
 }
