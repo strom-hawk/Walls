@@ -60,6 +60,13 @@ class ImageDetailsViewModel(
                     }
                 }
             }
+            is ImageDetailsScreenUIEvent.OnSetAsWallpaperClicked -> {
+                _uiState.value.selectedImage?.url?.let { url ->
+                    viewModelScope.launch {
+                        _uiEffect.emit(ImageDetailsScreenUIEffect.SetAsWallpaper(url))
+                    }
+                }
+            }
             is ImageDetailsScreenUIEvent.OnImageClicked -> {
                 _uiState.update { 
                     val nextFullScreen = !it.isImageFullScreen

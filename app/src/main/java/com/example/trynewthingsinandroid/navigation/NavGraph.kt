@@ -8,7 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.trynewthingsinandroid.imagedetail.ImageDetailScreen
+import com.example.trynewthingsinandroid.imagedetail.ImageDetailsScreen
 import com.example.trynewthingsinandroid.home.HomeScreen
 import com.example.trynewthingsinandroid.utils.Constants
 
@@ -41,7 +41,7 @@ fun AppNavHost(
             route = Screen.Detail.route,
             arguments = listOf(navArgument(Constants.IMAGE_ID) { type = NavType.StringType })
         ) {
-            ImageDetailScreen(
+            ImageDetailsScreen(
                 onBackClick = {
                     navController.popBackStack()
                 }

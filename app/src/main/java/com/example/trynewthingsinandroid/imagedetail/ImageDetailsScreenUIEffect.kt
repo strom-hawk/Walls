@@ -21,4 +21,11 @@ sealed class ImageDetailsScreenUIEffect {
      * @property fileName The name of the file to save.
      */
     data class DownloadImage(val url: String, val fileName: String) : ImageDetailsScreenUIEffect()
+
+    /**
+     * Effect to set an image as the device wallpaper.
+     *
+     * @property url The image URL to be set as wallpaper.
+     */
+    data class SetAsWallpaper(val url: String) : ImageDetailsScreenUIEffect()
 }

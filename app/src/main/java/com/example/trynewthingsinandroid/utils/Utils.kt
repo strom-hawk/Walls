@@ -1,11 +1,19 @@
 package com.example.trynewthingsinandroid.utils
 
 import android.app.DownloadManager
+import android.app.WallpaperManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.BitmapDrawable
 import android.os.Environment
+import android.widget.Toast
 import androidx.core.net.toUri
+import coil.ImageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import com.example.trynewthingsinandroid.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
@@ -59,4 +67,50 @@ fun downloadImage(
         setAllowedOverRoaming(true)
     }
     downloadManager.enqueue(request)
+}
+
+/**
+ * Fetches an image from a URL and sets it as the device wallpaper.
+ *
+ * @param url The image URL.
+ * @param context The context used for Coil and WallpaperManager.
+ */
+suspend fun setAsWallpaper(
+    url: String,
+    context: Context
+) {
+    withContext(Dispatchers.IO) {
+        val loader = ImageLoader(context)
+        val request = ImageRequest.Builder(context)
+            .data(url)
+            .allowHardware(false)
+            .build()
+
+        val result = loader.execute(request)
+        if (result is SuccessResult) {
+            val bitmap = (result.drawable as? BitmapDrawable)?.bitmap
+            if (bitmap != null) {
+                try {
+                    val wallpaperManager = WallpaperManager.getInstance(context)
+                    wallpaperManager.setBitmap(bitmap)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, context.getString(R.string.wallpaper_set_success), Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Error setting wallpaper")
+                    showErrorToast(context)
+                }
+            } else {
+                showErrorToast(context)
+            }
+        } else {
+            showErrorToast(context)
+        }
+    }
+}
+
+private suspend fun showErrorToast(context: Context) {
+    withContext(Dispatchers.Main) {
+        Toast.makeText(context, context.getString(R.string.wallpaper_set_failure), Toast.LENGTH_SHORT).show()
+    }
 }

@@ -26,4 +26,9 @@ sealed class ImageDetailsScreenUIEvent {
      * Event triggered when the bottom sheet should be dismissed.
      */
     data object DismissBottomSheet : ImageDetailsScreenUIEvent()
+
+    /**
+     * Event triggered when the user clicks the "Set as Wallpaper" button.
+     */
+    data object OnSetAsWallpaperClicked : ImageDetailsScreenUIEvent()
 }

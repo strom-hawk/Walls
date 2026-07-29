@@ -16,7 +16,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +48,7 @@ import coil.compose.AsyncImage
 import com.example.trynewthingsinandroid.R
 import com.example.trynewthingsinandroid.data.PhotoCredit
 import com.example.trynewthingsinandroid.utils.downloadImage
+import com.example.trynewthingsinandroid.utils.setAsWallpaper
 import com.example.trynewthingsinandroid.utils.shareImage
 
 /**
@@ -56,7 +59,7 @@ import com.example.trynewthingsinandroid.utils.shareImage
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImageDetailScreen(
+fun ImageDetailsScreen(
     onBackClick: () -> Unit,
     viewModel: ImageDetailsViewModel = viewModel()
 ) {
@@ -80,6 +83,10 @@ fun ImageDetailScreen(
                         fileName = effect.fileName,
                     )
                 }
+
+                is ImageDetailsScreenUIEffect.SetAsWallpaper -> {
+                    setAsWallpaper(context = context, url = effect.url)
+                }
             }
         }
     }
@@ -101,7 +108,7 @@ fun ImageDetailScreen(
 
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
-        sheetPeekHeight = if (uiState.isImageFullScreen) 140.dp else 0.dp,
+        sheetPeekHeight = if (uiState.isImageFullScreen) 160.dp else 0.dp,
         sheetContainerColor = Color.Black.copy(alpha = 0.4f),
         sheetContentColor = Color.White,
         sheetDragHandle = null,
@@ -148,7 +155,7 @@ fun ImageDetailScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.ArrowBack,
-                                    contentDescription = "Back",
+                                    contentDescription = stringResource(R.string.back_button_content_description),
                                     tint = Color.White
                                 )
                             }
@@ -191,7 +198,7 @@ fun PhotoCreditUI(photoCredit: PhotoCredit?) {
         Text(
             text = name,
             modifier = Modifier
-                .padding(start = 16.dp, top = 16.dp)
+                .padding(start = 16.dp)
                 .background(
                     color = Color.Black.copy(alpha = 0.4f),
                     shape = RoundedCornerShape(8.dp)
@@ -218,26 +225,45 @@ fun OptionsBottomSheet(
     onEvent: (ImageDetailsScreenUIEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 60.dp, top = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(32.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        IconButton(onClick = { onEvent(ImageDetailsScreenUIEvent.OnShareClicked) }) {
-            Icon(
-                imageVector = Icons.Default.Share,
-                contentDescription = "Share",
-                tint = Color.White
-            )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(32.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { onEvent(ImageDetailsScreenUIEvent.OnShareClicked) }) {
+                Icon(
+                    imageVector = Icons.Default.Share,
+                    contentDescription = stringResource(R.string.share_button_content_description),
+                    tint = Color.White
+                )
+            }
+            IconButton(onClick = { onEvent(ImageDetailsScreenUIEvent.OnDownloadClicked) }) {
+                Icon(
+                    imageVector = Icons.Default.Download,
+                    contentDescription = stringResource(R.string.download_button_content_description),
+                    tint = Color.White
+                )
+            }
         }
-        IconButton(onClick = { onEvent(ImageDetailsScreenUIEvent.OnDownloadClicked) }) {
+
+        Button(
+            onClick = { onEvent(ImageDetailsScreenUIEvent.OnSetAsWallpaperClicked) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp)
+        ) {
             Icon(
-                imageVector = Icons.Default.Download,
-                contentDescription = "Download",
-                tint = Color.White
+                imageVector = Icons.Default.Wallpaper,
+                contentDescription = null,
+                modifier = Modifier.padding(end = 8.dp)
             )
+            Text(text = stringResource(R.string.set_as_wallpaper))
         }
     }
 }
