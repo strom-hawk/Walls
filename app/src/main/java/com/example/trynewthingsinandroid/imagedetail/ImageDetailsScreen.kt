@@ -63,7 +63,11 @@ fun ImageDetailsScreen(
 
     // Synchronize BottomSheet state with UI Visibility
     LaunchedEffect(uiState.isImageFullScreen) {
-        scaffoldState.bottomSheetState.partialExpand()
+        if (uiState.isImageFullScreen) {
+            scaffoldState.bottomSheetState.expand()
+        } else {
+            scaffoldState.bottomSheetState.partialExpand()
+        }
     }
 
     // Collect and handle UI effects (one-time events like sharing)

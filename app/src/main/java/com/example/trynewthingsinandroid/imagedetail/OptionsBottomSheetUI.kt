@@ -42,7 +42,6 @@ fun OptionsBottomSheetUI(
         modifier = modifier
             .fillMaxWidth()
             .background(Color.Black.copy(alpha = 0.4f))
-            .padding(bottom = 40.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
@@ -51,7 +50,7 @@ fun OptionsBottomSheetUI(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 60.dp, top = 24.dp),
+                .padding(bottom = 100.dp, top = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
