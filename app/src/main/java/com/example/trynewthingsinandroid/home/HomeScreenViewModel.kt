@@ -1,18 +1,24 @@
 package com.example.trynewthingsinandroid.home
 
 import androidx.lifecycle.ViewModel
-import com.example.trynewthingsinandroid.firebase.RemoteConfigManager
+import androidx.lifecycle.viewModelScope
+import com.example.trynewthingsinandroid.data.mapper.toUIStateList
+import com.example.trynewthingsinandroid.data.repository.WallpaperRepositoryImpl
+import com.example.trynewthingsinandroid.domain.usecase.GetWallpapersUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
- * ViewModel for the Home Screen, responsible for loading wallpapers from Remote Config.
+ * ViewModel for the Home Screen, responsible for loading wallpapers from Firestore.
  */
 class HomeScreenViewModel : ViewModel() {
 
-    private val remoteConfigManager = RemoteConfigManager()
+    // Manual Dependency Injection
+    private val repository = WallpaperRepositoryImpl()
+    private val getWallpapersUseCase = GetWallpapersUseCase(repository)
 
     private val _uiState = MutableStateFlow(HomeScreenUIState())
     
@@ -22,24 +28,20 @@ class HomeScreenViewModel : ViewModel() {
     val uiState: StateFlow<HomeScreenUIState> = _uiState.asStateFlow()
 
     init {
-        // Initial load from defaults/cache
-        updateImages()
-        
-        // Fetch and activate
         fetchWallpapers()
     }
 
-    private fun fetchWallpapers() {
-        remoteConfigManager.fetchAndActivate { success ->
-            if (success) {
-                updateImages()
+    /**
+     * Fetches wallpapers from Firestore using the domain use case.
+     */
+    fun fetchWallpapers() {
+        viewModelScope.launch {
+            getWallpapersUseCase().onSuccess { wallpapers ->
+                _uiState.update { it.copy(images = wallpapers.toUIStateList()) }
+            }.onFailure {
+                // Error handling can be added here (e.g., showing a snackbar)
             }
         }
-    }
-
-    private fun updateImages() {
-        val images = remoteConfigManager.getHomeWallpapers()
-        _uiState.update { it.copy(images = images) }
     }
 
     /**

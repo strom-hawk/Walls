@@ -3,7 +3,9 @@ package com.example.trynewthingsinandroid.imagedetail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.trynewthingsinandroid.firebase.RemoteConfigManager
+import com.example.trynewthingsinandroid.data.mapper.toUIState
+import com.example.trynewthingsinandroid.data.repository.WallpaperRepositoryImpl
+import com.example.trynewthingsinandroid.domain.usecase.GetWallpaperByIdUseCase
 import com.example.trynewthingsinandroid.utils.Constants
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +18,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
- * ViewModel for the Image Detail Screen, responsible for finding the selected image by ID.
+ * ViewModel for the Image Detail Screen, responsible for fetching image details from Firestore.
  *
  * @param savedStateHandle Handle to the state saved across process death and navigation.
  */
@@ -24,7 +26,10 @@ class ImageDetailsViewModel(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val remoteConfigManager = RemoteConfigManager()
+    // Manual Dependency Injection
+    private val repository = WallpaperRepositoryImpl()
+    private val getWallpaperByIdUseCase = GetWallpaperByIdUseCase(repository)
+
     private val imageId: String? = savedStateHandle[Constants.IMAGE_ID]
 
     private val _uiState = MutableStateFlow(ImageDetailsScreenUIState())
@@ -95,18 +100,22 @@ class ImageDetailsViewModel(
     }
 
     /**
-     * Initializes the view state by fetching the selected image and setting the initial bottom sheet.
+     * Initializes the view state by fetching the selected image from Firestore.
      */
-    private fun initialiseView() {
+    fun initialiseView() {
         imageId?.let { id ->
-            val images = remoteConfigManager.getHomeWallpapers()
-            val image = images.find { it.id == id }
-            _uiState.update { 
-                it.copy(
-                    selectedImage = image,
-                    activeBottomSheet = ImageDetailsScreenBottomSheet.Options,
-                    isImageFullScreen = true
-                )
+            viewModelScope.launch {
+                getWallpaperByIdUseCase(id).onSuccess { wallpaper ->
+                    _uiState.update { 
+                        it.copy(
+                            selectedImage = wallpaper?.toUIState(),
+                            activeBottomSheet = ImageDetailsScreenBottomSheet.Options,
+                            isImageFullScreen = true
+                        )
+                    }
+                }.onFailure {
+                    // Handle failure
+                }
             }
         }
     }
