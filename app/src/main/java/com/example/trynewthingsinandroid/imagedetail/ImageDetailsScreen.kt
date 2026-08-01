@@ -38,6 +38,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.example.trynewthingsinandroid.R
 import com.example.trynewthingsinandroid.data.PhotoCredit
 import com.example.trynewthingsinandroid.utils.downloadImage
@@ -114,7 +116,7 @@ fun ImageDetailsScreen(
 
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
-        sheetPeekHeight = if (uiState.isImageFullScreen) 220.dp else 0.dp,
+        sheetPeekHeight = if (uiState.isImageFullScreen) 300.dp else 0.dp,
         sheetContainerColor = Color.Transparent,
         sheetContentColor = Color.White,
         sheetDragHandle = null,
@@ -186,10 +188,15 @@ fun ImageDetailsScreen(
 @Composable
 fun BackgroundImageUI(url: String?) {
     AsyncImage(
-        model = url,
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(url)
+            .crossfade(true)
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .build(),
         contentDescription = stringResource(R.string.wallpaper_detail_content_description),
         modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop
+        contentScale = ContentScale.FillBounds
     )
 }
 
