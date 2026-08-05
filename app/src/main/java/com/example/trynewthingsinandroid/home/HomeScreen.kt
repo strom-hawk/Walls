@@ -12,6 +12,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -24,6 +30,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -61,6 +70,15 @@ fun HomeScreen(
                     Text(
                         text = stringResource(id = R.string.toolbar_title),
                         fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    CategoryDropdown(
+                        categories = uiState.categories,
+                        selectedCategory = uiState.selectedCategory,
+                        onCategorySelected = { category ->
+                            viewModel.onUIEvent(HomeScreenUIEvent.SelectCategory(category))
+                        }
                     )
                 }
             )
@@ -141,6 +159,49 @@ private fun ImageLoadingIndicatorUI() {
             strokeWidth = 2.dp,
             color = MaterialTheme.colorScheme.primary
         )
+    }
+}
+
+@Composable
+private fun CategoryDropdown(
+    categories: List<String>,
+    selectedCategory: String,
+    onCategorySelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                imageVector = Icons.Default.FilterList,
+                contentDescription = "Filter by Category"
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            categories.forEach { category ->
+                val displayName = if (category == "All") {
+                    stringResource(id = R.string.category_all)
+                } else {
+                    category
+                }
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = displayName,
+                            fontWeight = if (category == selectedCategory) FontWeight.Bold else FontWeight.Normal
+                        )
+                    },
+                    onClick = {
+                        onCategorySelected(category)
+                        expanded = false
+                    }
+                )
+            }
+        }
     }
 }
 

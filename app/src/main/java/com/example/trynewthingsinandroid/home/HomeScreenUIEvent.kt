@@ -13,4 +13,11 @@ sealed class HomeScreenUIEvent {
      * @property id The unique identifier of the image to remove.
      */
     data class RemoveImage(val id: String) : HomeScreenUIEvent()
+
+    /**
+     * Event triggered when a category is selected for filtering.
+     *
+     * @property category The name of the selected category.
+     */
+    data class SelectCategory(val category: String) : HomeScreenUIEvent()
 }

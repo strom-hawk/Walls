@@ -2,6 +2,7 @@ package com.example.trynewthingsinandroid.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.trynewthingsinandroid.data.ImageUIState
 import com.example.trynewthingsinandroid.data.mapper.toUIStateList
 import com.example.trynewthingsinandroid.data.repository.WallpaperRepositoryImpl
 import com.example.trynewthingsinandroid.domain.usecase.GetWallpapersUseCase
@@ -27,6 +28,8 @@ class HomeScreenViewModel : ViewModel() {
      */
     val uiState: StateFlow<HomeScreenUIState> = _uiState.asStateFlow()
 
+    private var allImages: List<ImageUIState> = emptyList()
+
     init {
         fetchWallpapers()
     }
@@ -37,7 +40,18 @@ class HomeScreenViewModel : ViewModel() {
     fun fetchWallpapers() {
         viewModelScope.launch {
             getWallpapersUseCase().onSuccess { wallpapers ->
-                _uiState.update { it.copy(images = wallpapers.toUIStateList()) }
+                val uiImages = wallpapers.toUIStateList()
+                allImages = uiImages
+                
+                val categories = uiImages.mapNotNull { it.category }.distinct().sorted()
+                val fullCategoriesList = listOf("All") + categories
+
+                _uiState.update { 
+                    it.copy(
+                        images = uiImages,
+                        categories = fullCategoriesList
+                    )
+                }
             }.onFailure {
                 // Error handling can be added here (e.g., showing a snackbar)
             }
@@ -54,6 +68,28 @@ class HomeScreenViewModel : ViewModel() {
             is HomeScreenUIEvent.RemoveImage -> {
                 removeImage(event.id)
             }
+            is HomeScreenUIEvent.SelectCategory -> {
+                filterByCategory(event.category)
+            }
+        }
+    }
+
+    /**
+     * Filters the images based on the selected category.
+     *
+     * @param category The category to filter by.
+     */
+    private fun filterByCategory(category: String) {
+        _uiState.update { currentState ->
+            val filteredList = if (category == "All") {
+                allImages
+            } else {
+                allImages.filter { it.category == category }
+            }
+            currentState.copy(
+                selectedCategory = category,
+                images = filteredList
+            )
         }
     }
 
@@ -63,6 +99,7 @@ class HomeScreenViewModel : ViewModel() {
      * @param imageId The unique identifier of the image to remove.
      */
     private fun removeImage(imageId: String) {
+        allImages = allImages.filter { it.id != imageId }
         _uiState.update { currentState ->
             val updatedList = currentState.images.filter { it.id != imageId }
             currentState.copy(images = updatedList)

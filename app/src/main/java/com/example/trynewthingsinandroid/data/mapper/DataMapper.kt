@@ -11,7 +11,8 @@ fun Wallpaper.toUIState(): ImageUIState {
     return ImageUIState(
         id = this.id,
         url = this.url,
-        photoCredit = PhotoCredit(name = this.photographer)
+        photoCredit = PhotoCredit(name = this.photographer),
+        category = this.category
     )
 }
 

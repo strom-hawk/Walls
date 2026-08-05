@@ -41,7 +41,8 @@ class WallpaperRepositoryImpl : WallpaperRepository {
                 Wallpaper(
                     id = doc.id,
                     url = doc.getString("url"),
-                    photographer = doc.getString("photographer")
+                    photographer = doc.getString("photographer"),
+                    category = doc.getString("category")
                 )
             }
             
@@ -67,7 +68,8 @@ class WallpaperRepositoryImpl : WallpaperRepository {
                 val wallpaper = Wallpaper(
                     id = doc.id,
                     url = doc.getString("url"),
-                    photographer = doc.getString("photographer")
+                    photographer = doc.getString("photographer"),
+                    category = doc.getString("category")
                 )
                 Result.success(wallpaper)
             } else {
