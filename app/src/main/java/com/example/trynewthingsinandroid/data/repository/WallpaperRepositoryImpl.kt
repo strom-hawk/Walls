@@ -1,7 +1,7 @@
 package com.example.trynewthingsinandroid.data.repository
 
-import com.example.trynewthingsinandroid.domain.model.Wallpaper
-import com.example.trynewthingsinandroid.domain.repository.WallpaperRepository
+import com.example.shared.domain.model.Wallpaper
+import com.example.shared.domain.repository.WallpaperRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.PersistentCacheSettings
 import com.google.firebase.firestore.firestoreSettings

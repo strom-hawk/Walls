@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.trynewthingsinandroid.data.ImageUIState
 import com.example.trynewthingsinandroid.data.mapper.toUIStateList
 import com.example.trynewthingsinandroid.data.repository.WallpaperRepositoryImpl
-import com.example.trynewthingsinandroid.domain.usecase.GetWallpapersUseCase
+import com.example.shared.domain.usecase.GetWallpapersUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

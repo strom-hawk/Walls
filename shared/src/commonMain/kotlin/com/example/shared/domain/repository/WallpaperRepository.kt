@@ -1,6 +1,6 @@
-package com.example.trynewthingsinandroid.domain.repository
+package com.example.shared.domain.repository
 
-import com.example.trynewthingsinandroid.domain.model.Wallpaper
+import com.example.shared.domain.model.Wallpaper
 
 /**
  * Interface defining data operations for wallpapers.
