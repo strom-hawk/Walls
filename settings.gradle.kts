@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "TryNewThingsInAndroid"
 include(":app")
+include(":shared")
