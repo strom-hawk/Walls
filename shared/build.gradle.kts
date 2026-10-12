@@ -66,6 +66,7 @@ kotlin {
                 implementation("io.ktor:ktor-client-core:2.3.12")
                 implementation("io.ktor:ktor-client-content-negotiation:2.3.12")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.12")
+                implementation("dev.gitlive:firebase-firestore:2.1.0")
             }
         }
 
@@ -78,6 +79,9 @@ kotlin {
         androidMain {
             dependencies {
                 implementation("io.ktor:ktor-client-okhttp:2.3.12")
+                implementation(project.dependencies.platform("com.google.firebase:firebase-bom:34.16.0"))
+                implementation("com.google.firebase:firebase-common-ktx:21.0.0")
+                implementation("com.google.firebase:firebase-firestore-ktx:25.1.0")
             }
         }
 
