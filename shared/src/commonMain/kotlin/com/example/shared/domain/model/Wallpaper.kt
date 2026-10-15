@@ -1,4 +1,6 @@
-package com.example.trynewthingsinandroid.domain.model
+package com.example.shared.domain.model
+
+import kotlinx.serialization.Serializable
 
 /**
  * Domain model representing a wallpaper.
@@ -8,6 +10,7 @@ package com.example.trynewthingsinandroid.domain.model
  * @property photographer Name of the photographer.
  * @property category The category of the wallpaper.
  */
+@Serializable
 data class Wallpaper(
     val id: String,
     val url: String?,

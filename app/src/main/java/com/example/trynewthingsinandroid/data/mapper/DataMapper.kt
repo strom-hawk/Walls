@@ -2,7 +2,7 @@ package com.example.trynewthingsinandroid.data.mapper
 
 import com.example.trynewthingsinandroid.data.ImageUIState
 import com.example.trynewthingsinandroid.data.PhotoCredit
-import com.example.trynewthingsinandroid.domain.model.Wallpaper
+import com.example.shared.domain.model.Wallpaper
 
 /**
  * Maps a domain [Wallpaper] object to a UI [ImageUIState] object.

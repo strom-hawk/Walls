@@ -1,7 +1,7 @@
-package com.example.trynewthingsinandroid.domain.usecase
+package com.example.shared.domain.usecase
 
-import com.example.trynewthingsinandroid.domain.model.Wallpaper
-import com.example.trynewthingsinandroid.domain.repository.WallpaperRepository
+import com.example.shared.domain.model.Wallpaper
+import com.example.shared.domain.repository.WallpaperRepository
 
 /**
  * Use case to retrieve the list of all wallpapers.
