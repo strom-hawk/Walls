@@ -3,6 +3,8 @@ plugins {
     id("com.android.kotlin.multiplatform.library")
     id("com.android.lint")
     id("org.jetbrains.kotlin.plugin.serialization")
+    id("org.jetbrains.compose")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 kotlin {
@@ -63,10 +65,17 @@ kotlin {
                 implementation("org.jetbrains.kotlin:kotlin-stdlib:2.2.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
-                implementation("io.ktor:ktor-client-core:2.3.12")
-                implementation("io.ktor:ktor-client-content-negotiation:2.3.12")
-                implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.12")
+                implementation("io.ktor:ktor-client-core:3.0.0")
+                implementation("io.ktor:ktor-client-content-negotiation:3.0.0")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.0")
                 implementation("dev.gitlive:firebase-firestore:2.1.0")
+                implementation(compose.runtime)
+                implementation(compose.foundation)
+                implementation(compose.material3)
+                implementation(compose.ui)
+                implementation(compose.components.resources)
+                implementation("io.coil-kt.coil3:coil-compose:3.0.0-rc01")
+                implementation("io.coil-kt.coil3:coil-network-ktor3:3.0.0-rc01")
             }
         }
 
@@ -78,7 +87,7 @@ kotlin {
 
         androidMain {
             dependencies {
-                implementation("io.ktor:ktor-client-okhttp:2.3.12")
+                implementation("io.ktor:ktor-client-okhttp:3.0.0")
                 implementation(project.dependencies.platform("com.google.firebase:firebase-bom:34.16.0"))
                 implementation("com.google.firebase:firebase-common-ktx:21.0.0")
                 implementation("com.google.firebase:firebase-firestore-ktx:25.1.0")
@@ -95,7 +104,7 @@ kotlin {
 
         iosMain {
             dependencies {
-                implementation("io.ktor:ktor-client-darwin:2.3.12")
+                implementation("io.ktor:ktor-client-darwin:3.0.0")
             }
         }
     }
