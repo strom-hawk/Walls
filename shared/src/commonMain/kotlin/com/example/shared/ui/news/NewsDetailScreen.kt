@@ -1,29 +1,72 @@
 package com.example.shared.ui.news
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.shared.domain.model.Article
+import com.example.shared.util.rememberTextToSpeechPlayer
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
@@ -36,9 +79,44 @@ fun NewsDetailScreen(
     var textScale by remember { mutableStateOf(1f) } // A-/A+ control
     var isBookmarked by remember { mutableStateOf(false) }
     var isAiVoicePlaying by remember { mutableStateOf(false) }
+    var playbackProgress by remember { mutableStateOf(0f) }
     var showAiSummaryDialog by remember { mutableStateOf(false) }
     var commentCount by remember { mutableStateOf(42) }
     var isShared by remember { mutableStateOf(false) }
+
+    val ttsPlayer = rememberTextToSpeechPlayer(
+        onDone = {
+            isAiVoicePlaying = false
+            playbackProgress = 0f
+        }
+    )
+
+    // Handle AI voice playback simulation & TTS speech
+    LaunchedEffect(isAiVoicePlaying) {
+        if (isAiVoicePlaying) {
+            val fullText = buildString {
+                append("${article.title}. ")
+                if (article.description.isNotBlank()) {
+                    append(article.description)
+                }
+            }
+            ttsPlayer.speak(fullText)
+            playbackProgress = 0f
+
+            // Calculate dynamic duration based on word count (~300ms per word, min 4s, max 60s)
+            val wordCount = fullText.split("\\s+".toRegex()).size
+            val estimatedDurationMs = (wordCount * 300L).coerceIn(4000L, 60000L)
+            val stepTime = estimatedDurationMs / 50
+
+            while (isAiVoicePlaying && playbackProgress < 1f) {
+                delay(stepTime)
+                playbackProgress += 0.02f
+            }
+        } else {
+            ttsPlayer.stop()
+            playbackProgress = 0f
+        }
+    }
 
     // Futuristic Dark Theme Colors
     val neonCyan = Color(0xFF00E5FF)
@@ -61,7 +139,11 @@ fun NewsDetailScreen(
                     modifier = Modifier
                         .height(64.dp)
                         .fillMaxWidth(0.9f)
-                        .border(1.dp, Brush.horizontalGradient(listOf(neonCyan, neonViolet)), CircleShape),
+                        .border(
+                            1.dp,
+                            Brush.horizontalGradient(listOf(neonCyan, neonViolet)),
+                            CircleShape
+                        ),
                     shape = CircleShape,
                     color = Color(0xFF121826).copy(alpha = 0.85f),
                     shadowElevation = 12.dp
@@ -156,7 +238,10 @@ fun NewsDetailScreen(
                                 .drawBehind {
                                     drawCircle(
                                         brush = Brush.radialGradient(
-                                            colors = listOf(neonViolet.copy(alpha = 0.3f), Color.Transparent),
+                                            colors = listOf(
+                                                neonViolet.copy(alpha = 0.3f),
+                                                Color.Transparent
+                                            ),
                                             center = Offset(size.width / 2, 0f),
                                             radius = size.width
                                         ),
@@ -241,14 +326,27 @@ fun NewsDetailScreen(
                                         onClick = { if (textScale > 0.8f) textScale -= 0.1f },
                                         modifier = Modifier.size(32.dp)
                                     ) {
-                                        Text("A-", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            "A-",
+                                            color = Color.White,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
-                                    VerticalDivider(modifier = Modifier.height(16.dp), color = borderColor)
+                                    VerticalDivider(
+                                        modifier = Modifier.height(16.dp),
+                                        color = borderColor
+                                    )
                                     IconButton(
                                         onClick = { if (textScale < 1.4f) textScale += 0.1f },
                                         modifier = Modifier.size(32.dp)
                                     ) {
-                                        Text("A+", color = neonCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            "A+",
+                                            color = neonCyan,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
                                 }
                             }
@@ -296,7 +394,12 @@ fun NewsDetailScreen(
                                 border = BorderStroke(1.dp, neonViolet)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Default.Person, contentDescription = null, tint = neonCyan, modifier = Modifier.size(24.dp))
+                                    Icon(
+                                        Icons.Default.Person,
+                                        contentDescription = null,
+                                        tint = neonCyan,
+                                        modifier = Modifier.size(24.dp)
+                                    )
                                 }
                             }
                             Column {
@@ -316,10 +419,19 @@ fun NewsDetailScreen(
 
                         // Glowing "Listen (AI Voice)" Pill Button
                         Surface(
-                            onClick = { isAiVoicePlaying = !isAiVoicePlaying },
+                            onClick = {
+                                isAiVoicePlaying = !isAiVoicePlaying
+                                if (!isAiVoicePlaying) {
+                                    playbackProgress = 0f
+                                    ttsPlayer.stop()
+                                }
+                            },
                             shape = CircleShape,
                             color = if (isAiVoicePlaying) neonCyan.copy(alpha = 0.2f) else surfaceGlass,
-                            border = BorderStroke(1.5.dp, if (isAiVoicePlaying) neonCyan else neonViolet),
+                            border = BorderStroke(
+                                1.5.dp,
+                                if (isAiVoicePlaying) neonCyan else neonViolet
+                            ),
                             shadowElevation = 6.dp
                         ) {
                             Row(
@@ -334,7 +446,7 @@ fun NewsDetailScreen(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Text(
-                                    text = if (isAiVoicePlaying) "Playing..." else "Listen",
+                                    text = if (isAiVoicePlaying) "Playing ${(playbackProgress * 100).toInt()}%" else "Listen",
                                     style = MaterialTheme.typography.labelMedium,
                                     color = if (isAiVoicePlaying) neonCyan else Color.White,
                                     fontWeight = FontWeight.Bold
@@ -348,7 +460,10 @@ fun NewsDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = surfaceGlass),
-                        border = BorderStroke(1.dp, Brush.linearGradient(listOf(neonCyan, neonViolet)))
+                        border = BorderStroke(
+                            1.dp,
+                            Brush.linearGradient(listOf(neonCyan, neonViolet))
+                        )
                     ) {
                         Column(
                             modifier = Modifier.padding(20.dp),
@@ -405,54 +520,16 @@ fun NewsDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text(
-                            text = article.description.ifBlank {
-                                "As quantum computing intersects with advanced neural networks, a paradigm shift is occurring across global infrastructure. Researchers have successfully stabilized quantum entanglement states for over 72 hours, unlocking unprecedented computational capabilities."
-                            },
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = (16 * textScale).sp,
-                                lineHeight = (26 * textScale).sp,
-                                color = Color(0xFFE2E8F0)
-                            )
-                        )
-
-                        // Styled Blockquote with Neon Left-Side Accent Border
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp),
-                            color = Color(0xFF131B2E),
-                            border = BorderStroke(
-                                width = 0.5.dp,
-                                color = Color.White.copy(alpha = 0.08f)
-                            )
-                        ) {
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                Box(
-                                    modifier = Modifier
-                                        .width(4.dp)
-                                        .fillMaxHeight()
-                                        .background(Brush.verticalGradient(listOf(neonCyan, neonViolet)))
+                        if (article.description.isNotBlank()) {
+                            Text(
+                                text = article.description,
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = (16 * textScale).sp,
+                                    lineHeight = (26 * textScale).sp,
+                                    color = Color(0xFFE2E8F0)
                                 )
-                                Text(
-                                    text = "\"We are witnessing the dawn of self-evolving neural frameworks capable of autonomous problem solving at cosmic scale.\" — Dr. V. Nexus",
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontSize = (15 * textScale).sp,
-                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                                        color = Color.White
-                                    ),
-                                    modifier = Modifier.padding(16.dp)
-                                )
-                            }
+                            )
                         }
-
-                        Text(
-                            text = "Further analysis reveals that energy consumption has been reduced by 45% through neuromorphic caching algorithms. Industry leaders are already drafting interoperability standards to ensure seamless integration with legacy silicon networks.",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = (16 * textScale).sp,
-                                lineHeight = (26 * textScale).sp,
-                                color = Color(0xFFE2E8F0)
-                            )
-                        )
 
                         // Embedded Crisp Image with Rounded Corners (16dp Radius) & Caption
                         if (!article.imageUrl.isNullOrBlank()) {
@@ -473,18 +550,12 @@ fun NewsDetailScreen(
                                     contentScale = ContentScale.Crop
                                 )
                                 Text(
-                                    text = "Fig 1.1: Holographic visualization of quantum neural grid in active test mode.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
+                                    text = "Source Link: ${article.link}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = (14 * textScale).sp),
+                                    color = neonCyan
                                 )
                             }
                         }
-
-                        Text(
-                            text = "Source Link: ${article.link}",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = (14 * textScale).sp),
-                            color = neonCyan
-                        )
 
                         Spacer(modifier = Modifier.height(100.dp))
                     }
