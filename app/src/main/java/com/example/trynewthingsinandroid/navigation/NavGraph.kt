@@ -10,9 +10,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.shared.ui.news.NewsDetailScreen
 import com.example.shared.ui.news.NewsListScreen
-import com.example.trynewthingsinandroid.imagedetail.ImageDetailsScreen
-import com.example.trynewthingsinandroid.home.HomeScreen
-import com.example.trynewthingsinandroid.utils.Constants
 
 /**
  * The main navigation host for the application.
@@ -46,23 +43,6 @@ fun AppNavHost(
             val articleIndex = backStackEntry.arguments?.getInt("articleIndex") ?: 0
             NewsDetailScreen(
                 articleIndex = articleIndex,
-                onBackClick = {
-                    navController.popBackStack()
-                }
-            )
-        }
-        composable(Screen.Home.route) {
-            HomeScreen(
-                onImageClick = { id ->
-                    navController.navigate(Screen.Detail.createRoute(id))
-                }
-            )
-        }
-        composable(
-            route = Screen.Detail.route,
-            arguments = listOf(navArgument(Constants.IMAGE_ID) { type = NavType.StringType })
-        ) {
-            ImageDetailsScreen(
                 onBackClick = {
                     navController.popBackStack()
                 }
