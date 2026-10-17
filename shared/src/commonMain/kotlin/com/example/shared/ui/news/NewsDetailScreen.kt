@@ -39,6 +39,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.shared.domain.model.Article
+import com.example.shared.presentation.NewsDetailsScreenViewModel
 import com.example.shared.ui.theme.*
 import com.example.shared.util.rememberTextToSpeechPlayer
 import kotlinx.coroutines.delay
@@ -73,9 +76,26 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun NewsDetailScreen(
-    article: Article,
+    articleIndex: Int,
+    viewModel: NewsDetailsScreenViewModel = remember { NewsDetailsScreenViewModel(articleIndex) },
     onBackClick: () -> Unit
 ) {
+    val article by viewModel.article.collectAsState()
+
+    if (article == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(DarkBackground),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = NeonCyan)
+        }
+        return
+    }
+
+    val currentArticle = article!!
+
     // State management
     var textScale by remember { mutableStateOf(1f) }
     var isBookmarked by remember { mutableStateOf(false) }
@@ -96,9 +116,9 @@ fun NewsDetailScreen(
     LaunchedEffect(isAiVoicePlaying) {
         if (isAiVoicePlaying) {
             val fullText = buildString {
-                append("${article.title}. ")
-                if (article.description.isNotBlank()) {
-                    append(article.description)
+                append("${currentArticle.title}. ")
+                if (currentArticle.description.isNotBlank()) {
+                    append(currentArticle.description)
                 }
             }
             ttsPlayer.speak(fullText)
@@ -147,7 +167,7 @@ fun NewsDetailScreen(
                         .fillMaxWidth()
                         .height(380.dp)
                 ) {
-                    DetailHeroSection(imageUrl = article.imageUrl, title = article.title)
+                    DetailHeroSection(imageUrl = currentArticle.imageUrl, title = currentArticle.title)
                     DetailTopBar(
                         onBackClick = onBackClick,
                         onTextScaleDecrease = { if (textScale > 0.8f) textScale -= 0.1f },
@@ -168,7 +188,7 @@ fun NewsDetailScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     DetailHeaderContent(
-                        title = article.title,
+                        title = currentArticle.title,
                         textScale = textScale,
                         isAiVoicePlaying = isAiVoicePlaying,
                         playbackProgress = playbackProgress,
@@ -184,7 +204,7 @@ fun NewsDetailScreen(
                     AiKeyTakeawaysCard(textScale = textScale)
 
                     ArticleContentBody(
-                        article = article,
+                        article = currentArticle,
                         textScale = textScale
                     )
 

@@ -6,7 +6,17 @@ import com.example.shared.domain.repository.NewsRepository
 class GetNewsUseCase(
     private val repository: NewsRepository
 ) {
+    companion object {
+        private var cachedArticles: List<Article> = emptyList()
+
+        fun getCachedArticle(index: Int): Article? {
+            return cachedArticles.getOrNull(index)
+        }
+    }
+
     suspend operator fun invoke(): List<Article> {
-        return repository.getNews()
+        val articles = repository.getNews()
+        cachedArticles = articles
+        return articles
     }
 }

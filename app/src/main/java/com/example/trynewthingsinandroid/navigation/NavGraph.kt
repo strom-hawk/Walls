@@ -8,6 +8,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.shared.ui.news.NewsDetailScreen
+import com.example.shared.ui.news.NewsListScreen
 import com.example.trynewthingsinandroid.imagedetail.ImageDetailsScreen
 import com.example.trynewthingsinandroid.home.HomeScreen
 import com.example.trynewthingsinandroid.utils.Constants
@@ -23,13 +25,32 @@ import com.example.trynewthingsinandroid.utils.Constants
 fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Screen.Home.route
+    startDestination: String = Screen.NewsList.route
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier
     ) {
+        composable(Screen.NewsList.route) {
+            NewsListScreen(
+                onArticleClick = { index ->
+                    navController.navigate(Screen.NewsDetail.createRoute(index))
+                }
+            )
+        }
+        composable(
+            route = Screen.NewsDetail.route,
+            arguments = listOf(navArgument("articleIndex") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val articleIndex = backStackEntry.arguments?.getInt("articleIndex") ?: 0
+            NewsDetailScreen(
+                articleIndex = articleIndex,
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
         composable(Screen.Home.route) {
             HomeScreen(
                 onImageClick = { id ->

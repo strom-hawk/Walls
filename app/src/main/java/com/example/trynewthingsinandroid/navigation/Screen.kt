@@ -24,4 +24,16 @@ sealed class Screen(val route: String) {
          */
         fun createRoute(imageId: String) = "detail/$imageId"
     }
+
+    /**
+     * The news list screen displaying Samachar feeds.
+     */
+    object NewsList : Screen("news_list")
+
+    /**
+     * The news detail screen displaying a specific article by index.
+     */
+    object NewsDetail : Screen("news_detail/{articleIndex}") {
+        fun createRoute(articleIndex: Int) = "news_detail/$articleIndex"
+    }
 }

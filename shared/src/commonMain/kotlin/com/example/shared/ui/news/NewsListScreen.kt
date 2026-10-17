@@ -25,12 +25,12 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.shared.domain.model.Article
 import com.example.shared.presentation.NewsUiState
-import com.example.shared.presentation.NewsViewModel
+import com.example.shared.presentation.NewsListViewModel
 
 @Composable
 fun NewsListScreen(
-    viewModel: NewsViewModel = remember { NewsViewModel() },
-    onArticleClick: (Article) -> Unit
+    viewModel: NewsListViewModel = remember { NewsListViewModel() },
+    onArticleClick: (Int) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -228,9 +228,10 @@ fun NewsListScreen(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             items(filteredArticles, key = { it.articleId }) { article ->
+                                val originalIndex = state.articles.indexOf(article)
                                 FuturisticArticleCard(
                                     article = article,
-                                    onClick = { onArticleClick(article) },
+                                    onClick = { onArticleClick(originalIndex) },
                                     neonCyan = neonCyan,
                                     neonViolet = neonViolet,
                                     surfaceGlass = surfaceGlass,
