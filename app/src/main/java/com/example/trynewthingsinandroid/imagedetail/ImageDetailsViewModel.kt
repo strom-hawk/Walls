@@ -4,8 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.trynewthingsinandroid.data.mapper.toUIState
-import com.example.trynewthingsinandroid.data.repository.WallpaperRepositoryImpl
-import com.example.trynewthingsinandroid.domain.usecase.GetWallpaperByIdUseCase
+import com.example.shared.data.repository.WallpaperRepositoryImpl
+import com.example.shared.domain.usecase.GetWallpaperByIdUseCase
 import com.example.trynewthingsinandroid.utils.Constants
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
