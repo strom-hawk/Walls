@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -59,13 +61,14 @@ import com.example.shared.presentation.NewsDetailsScreenViewModel
 import com.example.shared.ui.theme.*
 import com.example.shared.util.rememberTextToSpeechPlayer
 import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun NewsDetailScreen(
     articleIndex: Int,
     viewModel: NewsDetailsScreenViewModel = remember { NewsDetailsScreenViewModel(articleIndex) },
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onReadFullNewsClick: (String) -> Unit = {},
+    onShareClick: (String, String) -> Unit = { _, _ -> }
 ) {
     val article by viewModel.article.collectAsState()
 
@@ -87,7 +90,6 @@ fun NewsDetailScreen(
     var textScale by remember { mutableStateOf(1f) }
     var isAiVoicePlaying by remember { mutableStateOf(false) }
     var playbackProgress by remember { mutableStateOf(0f) }
-    var isShared by remember { mutableStateOf(false) }
 
     val ttsPlayer = rememberTextToSpeechPlayer(
         onDone = {
@@ -145,7 +147,7 @@ fun NewsDetailScreen(
                     DetailTopBar(
                         category = currentArticle.category,
                         onBackClick = onBackClick,
-                        onShareClick = { isShared = true },
+                        onShareClick = { onShareClick(currentArticle.title, currentArticle.link) },
                         onTextScaleDecrease = { if (textScale > 0.8f) textScale -= 0.1f },
                         onTextScaleIncrease = { if (textScale < 1.4f) textScale += 0.1f }
                     )
@@ -181,37 +183,12 @@ fun NewsDetailScreen(
 
                     ArticleContentBody(
                         article = currentArticle,
-                        textScale = textScale
+                        textScale = textScale,
+                        onReadFullNewsClick = onReadFullNewsClick
                     )
 
                     Spacer(modifier = Modifier.height(60.dp))
                 }
-            }
-        }
-    }
-
-    if (isShared) {
-        LaunchedEffect(isShared) {
-            delay(2.seconds)
-            isShared = false
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 40.dp),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = NeonViolet,
-                shadowElevation = 8.dp
-            ) {
-                Text(
-                    text = "🔗 Article link copied to clipboard!",
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-                )
             }
         }
     }
@@ -509,7 +486,7 @@ fun AiKeyTakeawaysCard(textScale: Float) {
 }
 
 @Composable
-fun ArticleContentBody(article: Article, textScale: Float) {
+fun ArticleContentBody(article: Article, textScale: Float, onReadFullNewsClick: (String) -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -542,11 +519,39 @@ fun ArticleContentBody(article: Article, textScale: Float) {
                         .border(1.dp, BorderColor, RoundedCornerShape(16.dp)),
                     contentScale = ContentScale.Crop
                 )
-                Text(
-                    text = "Source Link: ${article.link}",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = (14 * textScale).sp),
-                    color = NeonCyan
-                )
+            }
+        }
+
+        if (article.link.isNotBlank()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = { onReadFullNewsClick(article.link) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(27.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = NeonCyan
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = DarkBackground,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "⚡ Read Full News",
+                        color = DarkBackground,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

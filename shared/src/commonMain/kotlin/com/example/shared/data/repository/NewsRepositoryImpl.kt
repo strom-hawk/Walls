@@ -12,14 +12,13 @@ class NewsRepositoryImpl(
         return response.results.map { dto ->
             val title = dto.title ?: "Untitled"
             val description = dto.description ?: ""
-            val content = dto.content ?: description
             val rawCreator = dto.creator?.firstOrNull()?.takeIf { it.isNotBlank() }
             val sourceName = dto.sourceName?.takeIf { it.isNotBlank() } ?: "Samachar News"
             val rawDate = dto.pubDate?.takeIf { it.isNotBlank() }
             val category = dto.category?.firstOrNull()?.uppercase()?.takeIf { it.isNotBlank() }
 
             val formattedDate = rawDate?.let { formatPubDate(it) }
-            val readingTime = calculateReadingTime(content, description, title)
+            val readingTime = calculateReadingTime(description, title)
 
             Article(
                 articleId = dto.articleId,
@@ -30,15 +29,14 @@ class NewsRepositoryImpl(
                 creator = rawCreator,
                 sourceName = sourceName,
                 pubDate = formattedDate,
-                content = content,
                 category = category,
                 readingTime = readingTime
             )
         }
     }
 
-    private fun calculateReadingTime(content: String, description: String, title: String): String {
-        val fullText = "$title $description $content"
+    private fun calculateReadingTime(description: String, title: String): String {
+        val fullText = "$title $description"
         val wordCount = fullText.split("\\s+".toRegex()).filter { it.isNotBlank() }.size
         val minutes = maxOf(1, wordCount / 200)
         return "$minutes min read"
