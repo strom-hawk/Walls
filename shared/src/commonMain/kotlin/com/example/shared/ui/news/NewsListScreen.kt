@@ -1,21 +1,32 @@
 package com.example.shared.ui.news
 
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.shared.domain.model.Article
 import com.example.shared.presentation.NewsUiState
 import com.example.shared.presentation.NewsViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewsListScreen(
     viewModel: NewsViewModel = remember { NewsViewModel() },
@@ -23,11 +34,129 @@ fun NewsListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Interactive states
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("All") }
+    val categories = listOf("All", "Quantum", "Neural AI", "Space", "Cybernetics", "Biotech")
+
+    // Futuristic Dark Theme Colors
+    val neonCyan = Color(0xFF00E5FF)
+    val neonViolet = Color(0xFF7C4DFF)
+    val darkBackground = Color(0xFF0A0E1A)
+    val surfaceGlass = Color(0xFF161D31).copy(alpha = 0.75f)
+    val borderColor = Color(0xFF2A3655).copy(alpha = 0.6f)
+
     Scaffold(
+        containerColor = darkBackground,
         topBar = {
-            TopAppBar(
-                title = { Text("Samachar - News") }
-            )
+            // Futuristic Top App Bar & Search Header
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(darkBackground)
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = neonCyan.copy(alpha = 0.2f),
+                            border = BorderStroke(1.dp, neonCyan)
+                        ) {
+                            Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Star, contentDescription = null, tint = neonCyan, modifier = Modifier.size(20.dp))
+                            }
+                        }
+                        Text(
+                            text = "NEXUS FEED",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                letterSpacing = 1.5.sp
+                            )
+                        )
+                    }
+
+                    // Profile / Status Indicator
+                    Surface(
+                        shape = CircleShape,
+                        color = surfaceGlass,
+                        border = BorderStroke(1.dp, borderColor)
+                    ) {
+                        IconButton(onClick = { viewModel.fetchNews() }) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Refresh Feed",
+                                tint = neonCyan
+                            )
+                        }
+                    }
+                }
+
+                // Interactive Search Bar
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search quantum articles...", color = Color.Gray) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = neonCyan) },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear", tint = Color.Gray)
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp),
+                    shape = RoundedCornerShape(27.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = surfaceGlass,
+                        unfocusedContainerColor = surfaceGlass,
+                        focusedBorderColor = neonCyan,
+                        unfocusedBorderColor = borderColor,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    ),
+                    singleLine = true
+                )
+
+                // Category Filter Chips
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(vertical = 4.dp)
+                ) {
+                    items(categories) { category ->
+                        val isSelected = selectedCategory == category
+                        Surface(
+                            onClick = { selectedCategory = category },
+                            shape = RoundedCornerShape(20.dp),
+                            color = if (isSelected) neonCyan.copy(alpha = 0.2f) else surfaceGlass,
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = if (isSelected) neonCyan else borderColor
+                            )
+                        ) {
+                            Text(
+                                text = category,
+                                color = if (isSelected) neonCyan else Color.LightGray,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            )
+                        }
+                    }
+                }
+            }
         }
     ) { paddingValues ->
         Box(
@@ -37,30 +166,77 @@ fun NewsListScreen(
         ) {
             when (val state = uiState) {
                 is NewsUiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = neonCyan
+                    )
                 }
                 is NewsUiState.Error -> {
                     Column(
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { viewModel.fetchNews() }) {
-                            Text("Retry")
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = Color(0xFFFF5252),
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Text(
+                            text = "Connection Failed: ${state.message}",
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Button(
+                            onClick = { viewModel.fetchNews() },
+                            colors = ButtonDefaults.buttonColors(containerColor = neonCyan)
+                        ) {
+                            Text("Retry Connection", color = darkBackground, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
                 is NewsUiState.Success -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(state.articles, key = { it.articleId }) { article ->
-                            ArticleCard(article = article, onClick = { onArticleClick(article) })
+                    // Filter articles based on search query and category
+                    val filteredArticles = state.articles.filter { article ->
+                        val matchesSearch = article.title.contains(searchQuery, ignoreCase = true) ||
+                                article.description.contains(searchQuery, ignoreCase = true)
+                        val matchesCategory = selectedCategory == "All" ||
+                                article.title.contains(selectedCategory, ignoreCase = true) ||
+                                article.description.contains(selectedCategory, ignoreCase = true)
+                        matchesSearch && matchesCategory
+                    }
+
+                    if (filteredArticles.isEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
+                            Text("No quantum feeds found", color = Color.Gray, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(filteredArticles, key = { it.articleId }) { article ->
+                                FuturisticArticleCard(
+                                    article = article,
+                                    onClick = { onArticleClick(article) },
+                                    neonCyan = neonCyan,
+                                    neonViolet = neonViolet,
+                                    surfaceGlass = surfaceGlass,
+                                    borderColor = borderColor
+                                )
+                            }
                         }
                     }
                 }
@@ -70,40 +246,144 @@ fun NewsListScreen(
 }
 
 @Composable
-fun ArticleCard(
+fun FuturisticArticleCard(
     article: Article,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    neonCyan: Color,
+    neonViolet: Color,
+    surfaceGlass: Color,
+    borderColor: Color
 ) {
+    var isBookmarked by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = surfaceGlass),
+        border = BorderStroke(1.dp, borderColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             if (!article.imageUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = article.imageUrl,
-                    contentDescription = article.title,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(180.dp),
-                    contentScale = ContentScale.Crop
-                )
+                        .height(180.dp)
+                ) {
+                    AsyncImage(
+                        model = article.imageUrl,
+                        contentDescription = article.title,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    // Category Pill Badge overlay on image
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(12.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color.Black.copy(alpha = 0.6f),
+                        border = BorderStroke(1.dp, neonCyan.copy(alpha = 0.7f))
+                    ) {
+                        Text(
+                            text = "⚡ QUANTUM",
+                            color = neonCyan,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+
+                    // Interactive Bookmark Button overlay on image
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(12.dp),
+                        shape = CircleShape,
+                        color = Color.Black.copy(alpha = 0.6f),
+                        border = BorderStroke(1.dp, borderColor)
+                    ) {
+                        IconButton(
+                            onClick = { isBookmarked = !isBookmarked },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            val scale by animateFloatAsState(
+                                targetValue = if (isBookmarked) 1.3f else 1f,
+                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                            )
+                            Icon(
+                                imageVector = if (isBookmarked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Bookmark",
+                                tint = if (isBookmarked) neonViolet else Color.White,
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .scale(scale)
+                            )
+                        }
+                    }
+                }
             }
-            Column(modifier = Modifier.padding(16.dp)) {
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Text(
                     text = article.title,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        lineHeight = 22.sp
+                    ),
                     maxLines = 2
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+
                 if (article.description.isNotBlank()) {
                     Text(
                         text = article.description,
                         style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 3
+                        color = Color.LightGray,
+                        maxLines = 2
                     )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Dr. Elian Vance • 4 min read",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = neonCyan,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Verified",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = neonCyan,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }

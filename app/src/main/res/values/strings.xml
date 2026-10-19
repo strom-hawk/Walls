@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">Walls</string>
-    <string name="toolbar_title">Walls</string>
+    <string name="app_name">Samachar</string>
+    <string name="toolbar_title">Samachar</string>
 
     <!-- Gallery -->
     <string name="wallpaper_image_content_description">Wallpaper Image</string>
