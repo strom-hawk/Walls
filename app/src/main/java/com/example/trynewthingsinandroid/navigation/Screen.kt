@@ -17,6 +17,11 @@ sealed class Screen(val route: String) {
     object Profile : Screen("profile")
 
     /**
+     * The themes selection screen.
+     */
+    object Themes : Screen("themes")
+
+    /**
      * The news detail screen displaying a specific article by ID.
      */
     object NewsDetail : Screen("news_detail/{articleId}") {

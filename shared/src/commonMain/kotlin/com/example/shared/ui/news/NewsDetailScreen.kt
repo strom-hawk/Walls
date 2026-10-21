@@ -58,7 +58,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.shared.domain.model.Article
 import com.example.shared.presentation.NewsDetailsScreenViewModel
-import com.example.shared.ui.theme.*
+import com.example.shared.ui.theme.ThemeManager
 import com.example.shared.util.rememberTextToSpeechPlayer
 import kotlinx.coroutines.delay
 
@@ -83,14 +83,23 @@ fun NewsDetailScreen(
 ) {
     val article by viewModel.article.collectAsState()
 
+    val currentTheme = ThemeManager.currentTheme
+    val darkBackground = currentTheme.backgroundColor
+    val neonCyan = currentTheme.accentColor
+    val neonViolet = currentTheme.accentColor.copy(alpha = 0.7f)
+    val surfaceGlass = currentTheme.cardColor
+    val borderColor = currentTheme.accentColor.copy(alpha = 0.3f)
+    val textColor = if (currentTheme.isLight) Color.Black else Color.White
+    val subtitleColor = if (currentTheme.isLight) Color.DarkGray else Color.LightGray
+
     if (article == null) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(DarkBackground),
+                .background(darkBackground),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = NeonCyan)
+            CircularProgressIndicator(color = neonCyan)
         }
         return
     }
@@ -136,7 +145,7 @@ fun NewsDetailScreen(
     }
 
     Scaffold(
-        containerColor = DarkBackground
+        containerColor = darkBackground
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -154,9 +163,18 @@ fun NewsDetailScreen(
                         .fillMaxWidth()
                         .height(380.dp)
                 ) {
-                    DetailHeroSection(imageUrl = currentArticle.imageUrl, title = currentArticle.title)
+                    DetailHeroSection(
+                        imageUrl = currentArticle.imageUrl,
+                        title = currentArticle.title,
+                        neonViolet = neonViolet,
+                        darkBackground = darkBackground
+                    )
                     DetailTopBar(
                         category = currentArticle.category,
+                        surfaceGlass = surfaceGlass,
+                        borderColor = borderColor,
+                        neonCyan = neonCyan,
+                        textColor = textColor,
                         onBackClick = onBackClick,
                         onShareClick = { onShareClick(currentArticle.title, currentArticle.link) },
                         onTextScaleDecrease = { if (textScale > 0.8f) textScale -= 0.1f },
@@ -170,7 +188,7 @@ fun NewsDetailScreen(
                         .fillMaxWidth()
                         .offset(y = (-32.dp))
                         .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
-                        .background(DarkBackground)
+                        .background(darkBackground)
                         .padding(horizontal = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
@@ -181,6 +199,11 @@ fun NewsDetailScreen(
                         textScale = textScale,
                         isAiVoicePlaying = isAiVoicePlaying,
                         playbackProgress = playbackProgress,
+                        surfaceGlass = surfaceGlass,
+                        neonCyan = neonCyan,
+                        neonViolet = neonViolet,
+                        textColor = textColor,
+                        subtitleColor = subtitleColor,
                         onListenClick = {
                             isAiVoicePlaying = !isAiVoicePlaying
                             if (!isAiVoicePlaying) {
@@ -190,11 +213,20 @@ fun NewsDetailScreen(
                         }
                     )
 
-                    AiKeyTakeawaysCard(textScale = textScale)
+                    AiKeyTakeawaysCard(
+                        textScale = textScale,
+                        surfaceGlass = surfaceGlass,
+                        neonCyan = neonCyan,
+                        neonViolet = neonViolet,
+                        textColor = textColor
+                    )
 
                     ArticleContentBody(
                         article = currentArticle,
                         textScale = textScale,
+                        neonCyan = neonCyan,
+                        borderColor = borderColor,
+                        textColor = textColor,
                         onReadFullNewsClick = onReadFullNewsClick
                     )
 
@@ -210,6 +242,10 @@ fun NewsDetailScreen(
 @Composable
 fun DetailTopBar(
     category: String?,
+    surfaceGlass: Color,
+    borderColor: Color,
+    neonCyan: Color,
+    textColor: Color,
     onBackClick: () -> Unit,
     onShareClick: () -> Unit,
     onTextScaleDecrease: () -> Unit,
@@ -225,14 +261,14 @@ fun DetailTopBar(
     ) {
         Surface(
             shape = CircleShape,
-            color = SurfaceGlass,
-            border = BorderStroke(1.dp, BorderColor)
+            color = surfaceGlass,
+            border = BorderStroke(1.dp, borderColor)
         ) {
             IconButton(onClick = onBackClick) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.White
+                    tint = textColor
                 )
             }
         }
@@ -244,12 +280,12 @@ fun DetailTopBar(
             if (!category.isNullOrBlank()) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = SurfaceGlass,
-                    border = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.6f))
+                    color = surfaceGlass,
+                    border = BorderStroke(1.dp, neonCyan.copy(alpha = 0.6f))
                 ) {
                     Text(
                         text = "⚡ $category",
-                        color = NeonCyan,
+                        color = neonCyan,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
@@ -259,14 +295,14 @@ fun DetailTopBar(
 
             Surface(
                 shape = CircleShape,
-                color = SurfaceGlass,
-                border = BorderStroke(1.dp, BorderColor)
+                color = surfaceGlass,
+                border = BorderStroke(1.dp, borderColor)
             ) {
                 IconButton(onClick = onShareClick, modifier = Modifier.size(36.dp)) {
                     Icon(
                         imageVector = Icons.Default.Share,
                         contentDescription = "Share",
-                        tint = Color.White,
+                        tint = textColor,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -274,19 +310,19 @@ fun DetailTopBar(
 
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = SurfaceGlass,
-                border = BorderStroke(1.dp, BorderColor)
+                color = surfaceGlass,
+                border = BorderStroke(1.dp, borderColor)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onTextScaleDecrease, modifier = Modifier.size(32.dp)) {
-                        Text("A-", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("A-", color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
-                    VerticalDivider(modifier = Modifier.height(16.dp), color = BorderColor)
+                    VerticalDivider(modifier = Modifier.height(16.dp), color = borderColor)
                     IconButton(onClick = onTextScaleIncrease, modifier = Modifier.size(32.dp)) {
-                        Text("A+", color = NeonCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("A+", color = neonCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -295,7 +331,7 @@ fun DetailTopBar(
 }
 
 @Composable
-fun DetailHeroSection(imageUrl: String?, title: String) {
+fun DetailHeroSection(imageUrl: String?, title: String, neonViolet: Color, darkBackground: Color) {
     Box(modifier = Modifier.fillMaxSize()) {
         if (!imageUrl.isNullOrBlank()) {
             AsyncImage(
@@ -306,7 +342,7 @@ fun DetailHeroSection(imageUrl: String?, title: String) {
                     .drawBehind {
                         drawCircle(
                             brush = Brush.radialGradient(
-                                colors = listOf(NeonViolet.copy(alpha = 0.3f), Color.Transparent),
+                                colors = listOf(neonViolet.copy(alpha = 0.3f), Color.Transparent),
                                 center = Offset(size.width / 2, 0f),
                                 radius = size.width
                             ),
@@ -325,7 +361,7 @@ fun DetailHeroSection(imageUrl: String?, title: String) {
                         colors = listOf(
                             Color.Black.copy(alpha = 0.3f),
                             Color.Transparent,
-                            DarkBackground
+                            darkBackground
                         ),
                         startY = 0f,
                         endY = Float.POSITIVE_INFINITY
@@ -341,6 +377,11 @@ fun DetailHeaderContent(
     textScale: Float,
     isAiVoicePlaying: Boolean,
     playbackProgress: Float,
+    surfaceGlass: Color,
+    neonCyan: Color,
+    neonViolet: Color,
+    textColor: Color,
+    subtitleColor: Color,
     onListenClick: () -> Unit
 ) {
     Column(
@@ -352,7 +393,7 @@ fun DetailHeaderContent(
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontSize = (26 * textScale).sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = textColor,
                 lineHeight = (34 * textScale).sp
             )
         )
@@ -369,11 +410,11 @@ fun DetailHeaderContent(
                 Surface(
                     shape = CircleShape,
                     modifier = Modifier.size(42.dp),
-                    color = NeonViolet.copy(alpha = 0.3f),
-                    border = BorderStroke(1.dp, NeonViolet)
+                    color = neonViolet.copy(alpha = 0.3f),
+                    border = BorderStroke(1.dp, neonViolet)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Person, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(24.dp))
+                        Icon(Icons.Default.Person, contentDescription = null, tint = neonCyan, modifier = Modifier.size(24.dp))
                     }
                 }
                 Column(
@@ -384,14 +425,14 @@ fun DetailHeaderContent(
                             text = article.creator,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color.White
+                            color = textColor
                         )
                     }
                     Text(
                         text = article.sourceName,
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
-                        color = NeonCyan
+                        color = neonCyan
                     )
                     val dateAndReadingTime = buildString {
                         if (!article.pubDate.isNullOrBlank()) {
@@ -402,7 +443,7 @@ fun DetailHeaderContent(
                     Text(
                         text = dateAndReadingTime,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = subtitleColor
                     )
                 }
             }
@@ -410,8 +451,8 @@ fun DetailHeaderContent(
             Surface(
                 onClick = onListenClick,
                 shape = CircleShape,
-                color = if (isAiVoicePlaying) NeonCyan.copy(alpha = 0.2f) else SurfaceGlass,
-                border = BorderStroke(1.5.dp, if (isAiVoicePlaying) NeonCyan else NeonViolet),
+                color = if (isAiVoicePlaying) neonCyan.copy(alpha = 0.2f) else surfaceGlass,
+                border = BorderStroke(1.5.dp, if (isAiVoicePlaying) neonCyan else neonViolet),
                 shadowElevation = 6.dp
             ) {
                 Row(
@@ -422,13 +463,13 @@ fun DetailHeaderContent(
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = "Listen AI Voice",
-                        tint = if (isAiVoicePlaying) NeonCyan else Color.White,
+                        tint = if (isAiVoicePlaying) neonCyan else textColor,
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = if (isAiVoicePlaying) "Playing ${(playbackProgress * 100).toInt()}%" else "Listen",
                         style = MaterialTheme.typography.labelMedium,
-                        color = if (isAiVoicePlaying) NeonCyan else Color.White,
+                        color = if (isAiVoicePlaying) neonCyan else textColor,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -438,12 +479,18 @@ fun DetailHeaderContent(
 }
 
 @Composable
-fun AiKeyTakeawaysCard(textScale: Float) {
+fun AiKeyTakeawaysCard(
+    textScale: Float,
+    surfaceGlass: Color,
+    neonCyan: Color,
+    neonViolet: Color,
+    textColor: Color
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceGlass),
-        border = BorderStroke(1.dp, Brush.linearGradient(listOf(NeonCyan, NeonViolet)))
+        colors = CardDefaults.cardColors(containerColor = surfaceGlass),
+        border = BorderStroke(1.dp, Brush.linearGradient(listOf(neonCyan, neonViolet)))
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -456,14 +503,14 @@ fun AiKeyTakeawaysCard(textScale: Float) {
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
-                    tint = NeonCyan,
+                    tint = neonCyan,
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
                     text = "⚡ AI Key Takeaways",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = NeonCyan
+                    color = neonCyan
                 )
             }
 
@@ -482,12 +529,12 @@ fun AiKeyTakeawaysCard(textScale: Float) {
                         modifier = Modifier
                             .padding(top = 6.dp)
                             .size(6.dp)
-                            .background(NeonViolet, CircleShape)
+                            .background(neonViolet, CircleShape)
                     )
                     Text(
                         text = point,
                         style = MaterialTheme.typography.bodyMedium.copy(fontSize = (14 * textScale).sp),
-                        color = Color.LightGray,
+                        color = textColor.copy(alpha = 0.85f),
                         lineHeight = (20 * textScale).sp
                     )
                 }
@@ -497,7 +544,14 @@ fun AiKeyTakeawaysCard(textScale: Float) {
 }
 
 @Composable
-fun ArticleContentBody(article: Article, textScale: Float, onReadFullNewsClick: (String) -> Unit) {
+fun ArticleContentBody(
+    article: Article,
+    textScale: Float,
+    neonCyan: Color,
+    borderColor: Color,
+    textColor: Color,
+    onReadFullNewsClick: (String) -> Unit
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -508,7 +562,7 @@ fun ArticleContentBody(article: Article, textScale: Float, onReadFullNewsClick: 
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontSize = (16 * textScale).sp,
                     lineHeight = (26 * textScale).sp,
-                    color = Color(0xFFE2E8F0)
+                    color = textColor
                 )
             )
         }
@@ -527,7 +581,7 @@ fun ArticleContentBody(article: Article, textScale: Float, onReadFullNewsClick: 
                         .fillMaxWidth()
                         .height(220.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .border(1.dp, BorderColor, RoundedCornerShape(16.dp)),
+                        .border(1.dp, borderColor, RoundedCornerShape(16.dp)),
                     contentScale = ContentScale.Crop
                 )
             }
@@ -542,7 +596,7 @@ fun ArticleContentBody(article: Article, textScale: Float, onReadFullNewsClick: 
                     .height(54.dp),
                 shape = RoundedCornerShape(27.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = NeonCyan
+                    containerColor = neonCyan
                 ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
             ) {
@@ -553,12 +607,12 @@ fun ArticleContentBody(article: Article, textScale: Float, onReadFullNewsClick: 
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = null,
-                        tint = DarkBackground,
+                        tint = Color.Black,
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
                         text = "⚡ Read Full News",
-                        color = DarkBackground,
+                        color = Color.Black,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )

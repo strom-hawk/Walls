@@ -38,27 +38,34 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.shared.domain.usecase.GetProfileOptionsUseCase
-import com.example.shared.ui.theme.BorderColor
-import com.example.shared.ui.theme.DarkBackground
-import com.example.shared.ui.theme.NeonCyan
-import com.example.shared.ui.theme.NeonViolet
-import com.example.shared.ui.theme.SurfaceGlass
+import com.example.shared.ui.theme.ThemeManager
 
 /**
  * User Profile Screen displaying user information, profile settings/options, and app version.
  *
  * @param onItemClick Callback invoked when a profile option item is tapped.
+ * @param onThemeClick Callback invoked when the Theme option is tapped.
  * @param getProfileOptionsUseCase Use case providing the list of profile option items.
  */
 @Composable
 fun ProfileScreen(
     onItemClick: (String) -> Unit,
+    onThemeClick: () -> Unit = {},
     getProfileOptionsUseCase: GetProfileOptionsUseCase = remember { GetProfileOptionsUseCase() }
 ) {
     val options = remember(getProfileOptionsUseCase) { getProfileOptionsUseCase() }
 
+    val currentTheme = ThemeManager.currentTheme
+    val darkBackground = currentTheme.backgroundColor
+    val neonCyan = currentTheme.accentColor
+    val neonViolet = currentTheme.accentColor.copy(alpha = 0.7f)
+    val surfaceGlass = currentTheme.cardColor
+    val borderColor = currentTheme.accentColor.copy(alpha = 0.3f)
+    val textColor = if (currentTheme.isLight) Color.Black else Color.White
+    val subtitleColor = if (currentTheme.isLight) Color.DarkGray else Color.LightGray
+
     Scaffold(
-        containerColor = DarkBackground,
+        containerColor = darkBackground,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
         Column(
@@ -78,7 +85,7 @@ fun ProfileScreen(
                     text = "PROFILE",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = textColor,
                         letterSpacing = 2.sp
                     )
                 )
@@ -86,8 +93,8 @@ fun ProfileScreen(
                 // User Header Card
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = SurfaceGlass,
-                    border = BorderStroke(1.dp, BorderColor),
+                    color = surfaceGlass,
+                    border = BorderStroke(1.dp, borderColor),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -97,15 +104,15 @@ fun ProfileScreen(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = NeonViolet.copy(alpha = 0.25f),
-                            border = BorderStroke(1.5.dp, NeonCyan),
+                            color = neonViolet.copy(alpha = 0.25f),
+                            border = BorderStroke(1.5.dp, neonCyan),
                             modifier = Modifier.size(56.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Default.Person,
                                     contentDescription = null,
-                                    tint = NeonCyan,
+                                    tint = neonCyan,
                                     modifier = Modifier.size(32.dp)
                                 )
                             }
@@ -116,13 +123,13 @@ fun ProfileScreen(
                                 text = "Samachar Reader",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = textColor
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "reader@samachar.ai",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = NeonCyan
+                                color = neonCyan
                             )
                         }
                     }
@@ -140,7 +147,17 @@ fun ProfileScreen(
                 items(options) { item ->
                     ProfileOptionCard(
                         item = item,
-                        onClick = { onItemClick(item.title) }
+                        surfaceGlass = surfaceGlass,
+                        borderColor = borderColor,
+                        neonCyan = neonCyan,
+                        textColor = textColor,
+                        onClick = {
+                            if (item.title == "Theme") {
+                                onThemeClick()
+                            } else {
+                                onItemClick(item.title)
+                            }
+                        }
                     )
                 }
             }
@@ -155,7 +172,7 @@ fun ProfileScreen(
                 Text(
                     text = "Version 1.0.0",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray,
+                    color = subtitleColor,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -172,6 +189,10 @@ fun ProfileScreen(
 @Composable
 fun ProfileOptionCard(
     item: ProfileOptionItem,
+    surfaceGlass: Color,
+    borderColor: Color,
+    neonCyan: Color,
+    textColor: Color,
     onClick: () -> Unit
 ) {
     Card(
@@ -179,8 +200,8 @@ fun ProfileOptionCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceGlass),
-        border = BorderStroke(1.dp, BorderColor)
+        colors = CardDefaults.cardColors(containerColor = surfaceGlass),
+        border = BorderStroke(1.dp, borderColor)
     ) {
         Row(
             modifier = Modifier
@@ -195,14 +216,14 @@ fun ProfileOptionCard(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = NeonCyan.copy(alpha = 0.15f),
+                    color = neonCyan.copy(alpha = 0.15f),
                     modifier = Modifier.size(38.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = item.icon,
                             contentDescription = null,
-                            tint = NeonCyan,
+                            tint = neonCyan,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -212,14 +233,14 @@ fun ProfileOptionCard(
                     text = item.title,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = textColor
                 )
             }
 
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = Color.Gray,
+                tint = textColor.copy(alpha = 0.6f),
                 modifier = Modifier.size(20.dp)
             )
         }

@@ -39,6 +39,8 @@ import androidx.navigation.navArgument
 import com.example.shared.ui.news.NewsDetailScreen
 import com.example.shared.ui.news.NewsListScreen
 import com.example.shared.ui.profile.ProfileScreen
+import com.example.shared.ui.theme.ThemeManager
+import com.example.shared.ui.theme.ThemesScreen
 import com.example.trynewthingsinandroid.R
 import com.example.trynewthingsinandroid.ui.news.NewsWebViewScreen
 
@@ -61,6 +63,8 @@ fun AppNavHost(
     val topLevelRoutes = listOf(Screen.NewsList.route, Screen.Profile.route)
     val showBottomBar = currentRoute in topLevelRoutes
 
+    val currentTheme = ThemeManager.currentTheme
+
     val bottomNavItems = listOf(
         BottomNavItem(stringResource(R.string.bottom_nav_home), Screen.NewsList.route, Icons.Default.Home),
         BottomNavItem(stringResource(R.string.bottom_nav_profile), Screen.Profile.route, Icons.Default.Person)
@@ -73,16 +77,16 @@ fun AppNavHost(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF0A0E1A))
+                        .background(currentTheme.backgroundColor)
                         .navigationBarsPadding()
                 ) {
                     HorizontalDivider(
                         thickness = 1.dp,
-                        color = Color(0xFF2A3655)
+                        color = currentTheme.accentColor.copy(alpha = 0.3f)
                     )
                     NavigationBar(
-                        containerColor = Color(0xFF0A0E1A),
-                        contentColor = Color.White,
+                        containerColor = currentTheme.backgroundColor,
+                        contentColor = if (currentTheme.isLight) Color.DarkGray else Color.White,
                         modifier = Modifier.height(56.dp),
                         windowInsets = WindowInsets(0, 0, 0, 0)
                     ) {
@@ -105,20 +109,20 @@ fun AppNavHost(
                                     Icon(
                                         imageVector = item.icon,
                                         contentDescription = item.label,
-                                        tint = if (selected) Color(0xFF00E5FF) else Color(0xFF8A99AD),
+                                        tint = if (selected) currentTheme.accentColor else (if (currentTheme.isLight) Color.Gray else Color(0xFF8A99AD)),
                                         modifier = Modifier.size(22.dp)
                                     )
                                 },
                                 label = {
                                     Text(
                                         text = item.label,
-                                        color = if (selected) Color(0xFF00E5FF) else Color(0xFF8A99AD),
+                                        color = if (selected) currentTheme.accentColor else (if (currentTheme.isLight) Color.Gray else Color(0xFF8A99AD)),
                                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                                         fontSize = 11.sp
                                     )
                                 },
                                 colors = NavigationBarItemDefaults.colors(
-                                    indicatorColor = Color(0xFF00E5FF).copy(alpha = 0.15f)
+                                    indicatorColor = currentTheme.accentColor.copy(alpha = 0.15f)
                                 )
                             )
                         }
@@ -145,6 +149,16 @@ fun AppNavHost(
                     onItemClick = { itemName ->
                         val message = context.getString(R.string.under_development_fmt, itemName)
                         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                    },
+                    onThemeClick = {
+                        navController.navigate(Screen.Themes.route)
+                    }
+                )
+            }
+            composable(Screen.Themes.route) {
+                ThemesScreen(
+                    onBackClick = {
+                        navController.popBackStack()
                     }
                 )
             }
