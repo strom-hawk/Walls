@@ -27,10 +27,18 @@ import com.example.shared.domain.model.Article
 import com.example.shared.presentation.NewsUiState
 import com.example.shared.presentation.NewsListViewModel
 
+/**
+ * Main Home feed screen displaying Samachar news articles in a futuristic dark cyan theme.
+ * Features search filtering, category selection chips, state handling (loading, error, success),
+ * and interactive article card feeds.
+ *
+ * @param viewModel The ViewModel providing news feed state and fetch operations.
+ * @param onArticleClick Callback invoked when an article card is tapped, passing its unique articleId.
+ */
 @Composable
 fun NewsListScreen(
     viewModel: NewsListViewModel = remember { NewsListViewModel() },
-    onArticleClick: (Int) -> Unit
+    onArticleClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -48,6 +56,7 @@ fun NewsListScreen(
 
     Scaffold(
         containerColor = darkBackground,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             // Futuristic Top App Bar & Search Header
             Column(
@@ -228,10 +237,9 @@ fun NewsListScreen(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             items(filteredArticles, key = { it.articleId }) { article ->
-                                val originalIndex = state.articles.indexOf(article)
                                 FuturisticArticleCard(
                                     article = article,
-                                    onClick = { onArticleClick(originalIndex) },
+                                    onClick = { onArticleClick(article.articleId) },
                                     neonCyan = neonCyan,
                                     neonViolet = neonViolet,
                                     surfaceGlass = surfaceGlass,

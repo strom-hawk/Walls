@@ -62,10 +62,21 @@ import com.example.shared.ui.theme.*
 import com.example.shared.util.rememberTextToSpeechPlayer
 import kotlinx.coroutines.delay
 
+/**
+ * Detailed view screen for a selected news article.
+ * Displays article hero image, title, creator, publication date, text-to-speech audio player,
+ * AI key takeaways summary card, body text, and full news link.
+ *
+ * @param articleId Unique identifier of the article to display.
+ * @param viewModel ViewModel fetching the detailed article data.
+ * @param onBackClick Callback when the back navigation button is clicked.
+ * @param onReadFullNewsClick Callback when "Read Full News" button is clicked, passing article URL.
+ * @param onShareClick Callback when share button is clicked, passing title and article link.
+ */
 @Composable
 fun NewsDetailScreen(
-    articleIndex: Int,
-    viewModel: NewsDetailsScreenViewModel = remember { NewsDetailsScreenViewModel(articleIndex) },
+    articleId: String,
+    viewModel: NewsDetailsScreenViewModel = remember(articleId) { NewsDetailsScreenViewModel(articleId) },
     onBackClick: () -> Unit,
     onReadFullNewsClick: (String) -> Unit = {},
     onShareClick: (String, String) -> Unit = { _, _ -> }
