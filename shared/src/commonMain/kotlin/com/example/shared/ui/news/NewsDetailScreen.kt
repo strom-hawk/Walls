@@ -21,6 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
@@ -69,6 +71,8 @@ import kotlinx.coroutines.delay
  *
  * @param articleId Unique identifier of the article to display.
  * @param viewModel ViewModel fetching the detailed article data.
+ * @param isBookmarked Whether the article is bookmarked.
+ * @param onBookmarkClick Callback when the bookmark button is clicked.
  * @param onBackClick Callback when the back navigation button is clicked.
  * @param onReadFullNewsClick Callback when "Read Full News" button is clicked, passing article URL.
  * @param onShareClick Callback when share button is clicked, passing title and article link.
@@ -77,6 +81,8 @@ import kotlinx.coroutines.delay
 fun NewsDetailScreen(
     articleId: String,
     viewModel: NewsDetailsScreenViewModel = remember(articleId) { NewsDetailsScreenViewModel(articleId) },
+    isBookmarked: Boolean = false,
+    onBookmarkClick: () -> Unit = {},
     onBackClick: () -> Unit,
     onReadFullNewsClick: (String) -> Unit = {},
     onShareClick: (String, String) -> Unit = { _, _ -> }
@@ -175,6 +181,8 @@ fun NewsDetailScreen(
                         borderColor = borderColor,
                         neonCyan = neonCyan,
                         textColor = textColor,
+                        isBookmarked = isBookmarked,
+                        onBookmarkClick = onBookmarkClick,
                         onBackClick = onBackClick,
                         onShareClick = { onShareClick(currentArticle.title, currentArticle.link) },
                         onTextScaleDecrease = { if (textScale > 0.8f) textScale -= 0.1f },
@@ -246,6 +254,8 @@ fun DetailTopBar(
     borderColor: Color,
     neonCyan: Color,
     textColor: Color,
+    isBookmarked: Boolean,
+    onBookmarkClick: () -> Unit,
     onBackClick: () -> Unit,
     onShareClick: () -> Unit,
     onTextScaleDecrease: () -> Unit,
@@ -303,6 +313,21 @@ fun DetailTopBar(
                         imageVector = Icons.Default.Share,
                         contentDescription = "Share",
                         tint = textColor,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            Surface(
+                shape = CircleShape,
+                color = surfaceGlass,
+                border = BorderStroke(1.dp, borderColor)
+            ) {
+                IconButton(onClick = onBookmarkClick, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                        contentDescription = "Bookmark",
+                        tint = if (isBookmarked) neonCyan else textColor,
                         modifier = Modifier.size(18.dp)
                     )
                 }

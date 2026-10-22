@@ -21,7 +21,12 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -36,13 +41,17 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.shared.domain.usecase.GetNewsUseCase
 import com.example.shared.ui.news.NewsDetailScreen
 import com.example.shared.ui.news.NewsListScreen
 import com.example.shared.ui.profile.ProfileScreen
 import com.example.shared.ui.theme.ThemeManager
 import com.example.shared.ui.theme.ThemesScreen
 import com.example.trynewthingsinandroid.R
+import com.example.trynewthingsinandroid.data.local.BookmarkRepository
+import com.example.trynewthingsinandroid.ui.news.BookmarkedNewsScreen
 import com.example.trynewthingsinandroid.ui.news.NewsWebViewScreen
+import kotlinx.coroutines.launch
 
 /**
  * The main navigation host for the application.
@@ -152,6 +161,9 @@ fun AppNavHost(
                     },
                     onThemeClick = {
                         navController.navigate(Screen.Themes.route)
+                    },
+                    onBookmarkedNewsClick = {
+                        navController.navigate(Screen.BookmarkedNews.route)
                     }
                 )
             }
@@ -162,6 +174,16 @@ fun AppNavHost(
                     }
                 )
             }
+            composable(Screen.BookmarkedNews.route) {
+                BookmarkedNewsScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onArticleClick = { articleId ->
+                        navController.navigate(Screen.NewsDetail.createRoute(articleId))
+                    }
+                )
+            }
             composable(
                 route = Screen.NewsDetail.route,
                 arguments = listOf(navArgument("articleId") { type = NavType.StringType })
@@ -169,8 +191,32 @@ fun AppNavHost(
                 val context = LocalContext.current
                 val encodedId = backStackEntry.arguments?.getString("articleId") ?: ""
                 val articleId = java.net.URLDecoder.decode(encodedId, "UTF-8")
+                val bookmarkRepository = remember { BookmarkRepository(context) }
+                val coroutineScope = rememberCoroutineScope()
+
+                var isBookmarked by remember(articleId) { mutableStateOf(false) }
+
+                LaunchedEffect(articleId) {
+                    isBookmarked = bookmarkRepository.isBookmarked(articleId)
+                }
+
+                val article = GetNewsUseCase.getCachedArticleById(articleId)
+
                 NewsDetailScreen(
                     articleId = articleId,
+                    isBookmarked = isBookmarked,
+                    onBookmarkClick = {
+                        coroutineScope.launch {
+                            isBookmarked = !isBookmarked
+                            if (isBookmarked && article != null) {
+                                bookmarkRepository.addBookmark(article)
+                                Toast.makeText(context, "News Bookmarked", Toast.LENGTH_SHORT).show()
+                            } else {
+                                bookmarkRepository.removeBookmark(articleId)
+                                Toast.makeText(context, "Bookmark removed", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
                     onBackClick = {
                         navController.popBackStack()
                     },

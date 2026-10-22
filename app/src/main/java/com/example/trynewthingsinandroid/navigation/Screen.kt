@@ -22,6 +22,11 @@ sealed class Screen(val route: String) {
     object Themes : Screen("themes")
 
     /**
+     * The bookmarked news screen.
+     */
+    object BookmarkedNews : Screen("bookmarked_news")
+
+    /**
      * The news detail screen displaying a specific article by ID.
      */
     object NewsDetail : Screen("news_detail/{articleId}") {

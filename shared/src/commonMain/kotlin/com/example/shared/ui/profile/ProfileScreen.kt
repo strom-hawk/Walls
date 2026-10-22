@@ -51,6 +51,7 @@ import com.example.shared.ui.theme.ThemeManager
 fun ProfileScreen(
     onItemClick: (String) -> Unit,
     onThemeClick: () -> Unit = {},
+    onBookmarkedNewsClick: () -> Unit = {},
     getProfileOptionsUseCase: GetProfileOptionsUseCase = remember { GetProfileOptionsUseCase() }
 ) {
     val options = remember(getProfileOptionsUseCase) { getProfileOptionsUseCase() }
@@ -154,6 +155,8 @@ fun ProfileScreen(
                         onClick = {
                             if (item.title == "Theme") {
                                 onThemeClick()
+                            } else if (item.title == "Bookmarked news") {
+                                onBookmarkedNewsClick()
                             } else {
                                 onItemClick(item.title)
                             }
