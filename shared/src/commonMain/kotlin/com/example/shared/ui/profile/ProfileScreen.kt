@@ -84,10 +84,10 @@ fun ProfileScreen(
             ) {
                 Text(
                     text = "PROFILE",
-                    style = MaterialTheme.typography.headlineMedium.copy(
+                    style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = textColor,
-                        letterSpacing = 2.sp
+                        letterSpacing = 1.5.sp
                     )
                 )
 

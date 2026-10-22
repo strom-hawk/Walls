@@ -96,10 +96,10 @@ fun ThemesScreen(
 
                     Text(
                         text = "Themes",
-                        style = MaterialTheme.typography.headlineMedium.copy(
+                        style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = if (currentTheme.isLight) Color.Black else Color.White,
-                            letterSpacing = 1.5.sp
+                            letterSpacing = 1.sp
                         )
                     )
                 }

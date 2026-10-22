@@ -109,10 +109,10 @@ fun BookmarkedNewsScreen(
 
                 Text(
                     text = "Bookmarked News",
-                    style = MaterialTheme.typography.headlineMedium.copy(
+                    style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = textColor,
-                        letterSpacing = 1.5.sp
+                        letterSpacing = 1.sp
                     )
                 )
             }

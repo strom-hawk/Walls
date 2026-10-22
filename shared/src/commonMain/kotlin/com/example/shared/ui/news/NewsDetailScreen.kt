@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -99,14 +101,13 @@ fun NewsDetailScreen(
     val subtitleColor = if (currentTheme.isLight) Color.DarkGray else Color.LightGray
 
     if (article == null) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(darkBackground),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(color = neonCyan)
-        }
+        ArticleNotFoundScreen(
+            title = "Article Not Found",
+            description = "This article is no longer cached in memory. Please return to the news feed to explore the latest Samachar feeds.",
+            ctaText = "⚡ Return to News Feed",
+            onCtaClick = onBackClick,
+            onBackClick = onBackClick
+        )
         return
     }
 
@@ -238,7 +239,7 @@ fun NewsDetailScreen(
                         onReadFullNewsClick = onReadFullNewsClick
                     )
 
-                    Spacer(modifier = Modifier.height(60.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }
