@@ -318,11 +318,11 @@ fun DetailTopBar(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onTextScaleDecrease, modifier = Modifier.size(32.dp)) {
-                        Text("A-", color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("A-", color = textColor, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     }
                     VerticalDivider(modifier = Modifier.height(16.dp), color = borderColor)
                     IconButton(onClick = onTextScaleIncrease, modifier = Modifier.size(32.dp)) {
-                        Text("A+", color = neonCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("A+", color = neonCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -391,10 +391,10 @@ fun DetailHeaderContent(
         Text(
             text = article.title,
             style = MaterialTheme.typography.headlineMedium.copy(
-                fontSize = (26 * textScale).sp,
+                fontSize = (23.5 * textScale).sp,
                 fontWeight = FontWeight.Bold,
                 color = textColor,
-                lineHeight = (34 * textScale).sp
+                lineHeight = (30 * textScale).sp
             )
         )
 
@@ -533,9 +533,9 @@ fun AiKeyTakeawaysCard(
                     )
                     Text(
                         text = point,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = (14 * textScale).sp),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = (12.5 * textScale).sp),
                         color = textColor.copy(alpha = 0.85f),
-                        lineHeight = (20 * textScale).sp
+                        lineHeight = (18 * textScale).sp
                     )
                 }
             }
@@ -560,8 +560,8 @@ fun ArticleContentBody(
             Text(
                 text = article.description,
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = (16 * textScale).sp,
-                    lineHeight = (26 * textScale).sp,
+                    fontSize = (14.5 * textScale).sp,
+                    lineHeight = (23 * textScale).sp,
                     color = textColor
                 )
             )

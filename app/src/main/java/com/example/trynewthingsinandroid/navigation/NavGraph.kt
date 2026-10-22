@@ -118,7 +118,7 @@ fun AppNavHost(
                                         text = item.label,
                                         color = if (selected) currentTheme.accentColor else (if (currentTheme.isLight) Color.Gray else Color(0xFF8A99AD)),
                                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                        fontSize = 11.sp
+                                        fontSize = 10.sp
                                     )
                                 },
                                 colors = NavigationBarItemDefaults.colors(
