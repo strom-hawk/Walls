@@ -10,12 +10,20 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.shared.ui.theme.SamacharTheme
 import com.example.shared.ui.theme.ThemeManager
+import com.example.trynewthingsinandroid.data.local.ThemePreferences
 import com.example.trynewthingsinandroid.navigation.AppNavHost
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        val themePreferences = ThemePreferences(applicationContext)
+        val savedThemeId = themePreferences.getSavedThemeId(ThemeManager.themes.first().id)
+        ThemeManager.setTheme(savedThemeId)
+        ThemeManager.onThemeChanged = { themeId ->
+            themePreferences.saveThemeId(themeId)
+        }
 
         enableEdgeToEdge()
         setContent {

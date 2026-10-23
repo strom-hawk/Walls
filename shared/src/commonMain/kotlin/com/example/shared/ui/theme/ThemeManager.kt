@@ -80,9 +80,12 @@ object ThemeManager {
     var currentTheme by mutableStateOf(themes.first())
         private set
 
+    var onThemeChanged: ((String) -> Unit)? = null
+
     fun setTheme(themeId: String) {
         themes.find { it.id == themeId }?.let {
             currentTheme = it
+            onThemeChanged?.invoke(it.id)
         }
     }
 }
