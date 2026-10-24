@@ -12,6 +12,10 @@ class GetNewsUseCase(
         fun getCachedArticleById(articleId: String): Article? {
             return cachedArticles.find { it.articleId == articleId }
         }
+
+        fun setCachedArticles(articles: List<Article>) {
+            cachedArticles = articles
+        }
     }
 
     suspend operator fun invoke(): List<Article> {

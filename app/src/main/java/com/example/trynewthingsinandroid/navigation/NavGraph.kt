@@ -42,6 +42,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.shared.domain.usecase.GetNewsUseCase
+import com.example.shared.presentation.NewsListViewModel
 import com.example.shared.ui.news.NewsDetailScreen
 import com.example.shared.ui.news.NewsListScreen
 import com.example.shared.ui.profile.ProfileScreen
@@ -49,6 +50,7 @@ import com.example.shared.ui.theme.ThemeManager
 import com.example.shared.ui.theme.ThemesScreen
 import com.example.trynewthingsinandroid.R
 import com.example.trynewthingsinandroid.data.local.BookmarkRepository
+import com.example.trynewthingsinandroid.data.local.NewsCacheManager
 import com.example.trynewthingsinandroid.ui.news.BookmarkedNewsScreen
 import com.example.trynewthingsinandroid.ui.news.NewsWebViewScreen
 import kotlinx.coroutines.launch
@@ -146,7 +148,16 @@ fun AppNavHost(
             modifier = Modifier.padding(paddingValues)
         ) {
             composable(Screen.NewsList.route) {
+                val context = LocalContext.current
+                val cacheManager = remember { NewsCacheManager(context) }
+                val viewModel = remember {
+                    NewsListViewModel(
+                        loadCachedNews = { cacheManager.getCachedNews() },
+                        saveNewsToCache = { articles -> cacheManager.saveAndPruneNews(articles) }
+                    )
+                }
                 NewsListScreen(
+                    viewModel = viewModel,
                     onArticleClick = { articleId ->
                         navController.navigate(Screen.NewsDetail.createRoute(articleId))
                     }

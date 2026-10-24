@@ -16,12 +16,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.shared.ui.theme.DarkBackground
 import com.example.shared.ui.theme.NeonCyan
 import com.example.shared.ui.theme.SurfaceGlass
 import com.example.shared.ui.theme.BorderColor
+import com.example.trynewthingsinandroid.ui.theme.Spacing1
+import com.example.trynewthingsinandroid.ui.theme.Spacing3
+import com.example.trynewthingsinandroid.ui.theme.Spacing12
+import com.example.trynewthingsinandroid.ui.theme.Spacing16
+import com.example.trynewthingsinandroid.ui.theme.Spacing220
 
 /**
  * A composable screen that displays full news articles by loading source URLs in a native Android [WebView].
@@ -53,18 +57,18 @@ fun NewsWebViewScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = Spacing16, vertical = Spacing12),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing12),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
                             shape = CircleShape,
                             color = SurfaceGlass,
-                            border = BorderStroke(1.dp, BorderColor)
+                            border = BorderStroke(Spacing1, BorderColor)
                         ) {
                             IconButton(onClick = onBackClick) {
                                 Icon(
@@ -75,7 +79,7 @@ fun NewsWebViewScreen(
                             }
                         }
                         Column(
-                            modifier = Modifier.widthIn(max = 220.dp)
+                            modifier = Modifier.widthIn(max = Spacing220)
                         ) {
                             Text(
                                 text = "SAMACHAR READER",
@@ -95,7 +99,7 @@ fun NewsWebViewScreen(
                     Surface(
                         shape = CircleShape,
                         color = SurfaceGlass,
-                        border = BorderStroke(1.dp, BorderColor)
+                        border = BorderStroke(Spacing1, BorderColor)
                     ) {
                         IconButton(onClick = { webViewInstance?.reload() }) {
                             Icon(
@@ -112,7 +116,7 @@ fun NewsWebViewScreen(
                         progress = { progress / 100f },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(3.dp),
+                            .height(Spacing3),
                         color = NeonCyan,
                         trackColor = Color.Transparent
                     )
