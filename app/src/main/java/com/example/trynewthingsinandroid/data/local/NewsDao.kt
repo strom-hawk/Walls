@@ -14,7 +14,10 @@ interface NewsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNewsList(newsList: List<NewsFeedEntity>)
 
-    @Query("DELETE FROM news_feed_articles WHERE articleId NOT IN (SELECT articleId FROM news_feed_articles ORDER BY timestamp DESC LIMIT 50)")
+    /**
+     * Deletes news feed articles older than the top 50, while preserving any bookmarked articles.
+     */
+    @Query("DELETE FROM news_feed_articles WHERE articleId NOT IN (SELECT articleId FROM bookmarked_articles) AND articleId NOT IN (SELECT articleId FROM news_feed_articles ORDER BY timestamp DESC LIMIT 50)")
     suspend fun pruneOldNews()
 
     @Transaction
