@@ -45,6 +45,7 @@ import com.example.shared.domain.usecase.GetNewsUseCase
 import com.example.shared.presentation.NewsListViewModel
 import com.example.shared.ui.news.NewsDetailScreen
 import com.example.shared.ui.news.NewsListScreen
+import com.example.shared.ui.profile.ContactUsScreen
 import com.example.shared.ui.profile.ProfileScreen
 import com.example.shared.ui.theme.ThemeManager
 import com.example.shared.ui.theme.ThemesScreen
@@ -175,6 +176,9 @@ fun AppNavHost(
                     },
                     onBookmarkedNewsClick = {
                         navController.navigate(Screen.BookmarkedNews.route)
+                    },
+                    onContactUsClick = {
+                        navController.navigate(Screen.ContactUs.route)
                     }
                 )
             }
@@ -192,6 +196,25 @@ fun AppNavHost(
                     },
                     onArticleClick = { articleId ->
                         navController.navigate(Screen.NewsDetail.createRoute(articleId))
+                    }
+                )
+            }
+            composable(Screen.ContactUs.route) {
+                val context = LocalContext.current
+                ContactUsScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onEmailClick = { email ->
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = android.net.Uri.parse("mailto:$email")
+                            putExtra(Intent.EXTRA_SUBJECT, "Feedback for Samachar")
+                        }
+                        try {
+                            context.startActivity(intent)
+                        } catch (_: Exception) {
+                            Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 )
             }

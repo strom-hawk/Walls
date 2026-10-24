@@ -52,6 +52,7 @@ fun ProfileScreen(
     onItemClick: (String) -> Unit,
     onThemeClick: () -> Unit = {},
     onBookmarkedNewsClick: () -> Unit = {},
+    onContactUsClick: () -> Unit = {},
     getProfileOptionsUseCase: GetProfileOptionsUseCase = remember { GetProfileOptionsUseCase() }
 ) {
     val options = remember(getProfileOptionsUseCase) { getProfileOptionsUseCase() }
@@ -157,6 +158,8 @@ fun ProfileScreen(
                                 onThemeClick()
                             } else if (item.title == "Bookmarked news") {
                                 onBookmarkedNewsClick()
+                            } else if (item.title == "Contact us") {
+                                onContactUsClick()
                             } else {
                                 onItemClick(item.title)
                             }
