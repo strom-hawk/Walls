@@ -282,22 +282,23 @@ fun FuturisticArticleCard(
                         contentScale = ContentScale.Crop
                     )
 
-                    // Category Pill Badge overlay on image
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(12.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        color = Color.Black.copy(alpha = 0.6f),
-                        border = BorderStroke(1.dp, neonCyan.copy(alpha = 0.7f))
-                    ) {
-                        Text(
-                            text = "⚡ QUANTUM",
-                            color = neonCyan,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
+                    if (!article.category.isNullOrBlank()) {
+                        Surface(
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(12.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color.Black.copy(alpha = 0.6f),
+                            border = BorderStroke(1.dp, neonCyan.copy(alpha = 0.7f))
+                        ) {
+                            Text(
+                                text = "⚡ ${article.category}",
+                                color = neonCyan,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
                     }
 
                     // Interactive Bookmark Button overlay on image
@@ -362,8 +363,15 @@ fun FuturisticArticleCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val metaText = buildString {
+                        append(article.sourceName)
+                        if (!article.pubDate.isNullOrBlank()) {
+                            append(" • ${article.pubDate}")
+                        }
+                        append(" • ${article.readingTime}")
+                    }
                     Text(
-                        text = "Dr. Elian Vance • 4 min read",
+                        text = metaText,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )

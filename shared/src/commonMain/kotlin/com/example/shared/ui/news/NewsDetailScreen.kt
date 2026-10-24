@@ -1,8 +1,5 @@
 package com.example.shared.ui.news
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,17 +21,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -58,7 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -72,13 +61,14 @@ import com.example.shared.presentation.NewsDetailsScreenViewModel
 import com.example.shared.ui.theme.*
 import com.example.shared.util.rememberTextToSpeechPlayer
 import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun NewsDetailScreen(
     articleIndex: Int,
     viewModel: NewsDetailsScreenViewModel = remember { NewsDetailsScreenViewModel(articleIndex) },
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onReadFullNewsClick: (String) -> Unit = {},
+    onShareClick: (String, String) -> Unit = { _, _ -> }
 ) {
     val article by viewModel.article.collectAsState()
 
@@ -98,12 +88,8 @@ fun NewsDetailScreen(
 
     // State management
     var textScale by remember { mutableStateOf(1f) }
-    var isBookmarked by remember { mutableStateOf(false) }
     var isAiVoicePlaying by remember { mutableStateOf(false) }
     var playbackProgress by remember { mutableStateOf(0f) }
-    var showAiSummaryDialog by remember { mutableStateOf(false) }
-    var commentCount by remember { mutableStateOf(42) }
-    var isShared by remember { mutableStateOf(false) }
 
     val ttsPlayer = rememberTextToSpeechPlayer(
         onDone = {
@@ -139,17 +125,7 @@ fun NewsDetailScreen(
     }
 
     Scaffold(
-        containerColor = DarkBackground,
-        bottomBar = {
-            FloatingBottomDeck(
-                isBookmarked = isBookmarked,
-                commentCount = commentCount,
-                onAiSummaryClick = { showAiSummaryDialog = true },
-                onBookmarkClick = { isBookmarked = !isBookmarked },
-                onShareClick = { isShared = true },
-                onCommentClick = { commentCount++ }
-            )
-        }
+        containerColor = DarkBackground
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -169,7 +145,9 @@ fun NewsDetailScreen(
                 ) {
                     DetailHeroSection(imageUrl = currentArticle.imageUrl, title = currentArticle.title)
                     DetailTopBar(
+                        category = currentArticle.category,
                         onBackClick = onBackClick,
+                        onShareClick = { onShareClick(currentArticle.title, currentArticle.link) },
                         onTextScaleDecrease = { if (textScale > 0.8f) textScale -= 0.1f },
                         onTextScaleIncrease = { if (textScale < 1.4f) textScale += 0.1f }
                     )
@@ -188,7 +166,7 @@ fun NewsDetailScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     DetailHeaderContent(
-                        title = currentArticle.title,
+                        article = currentArticle,
                         textScale = textScale,
                         isAiVoicePlaying = isAiVoicePlaying,
                         playbackProgress = playbackProgress,
@@ -205,41 +183,12 @@ fun NewsDetailScreen(
 
                     ArticleContentBody(
                         article = currentArticle,
-                        textScale = textScale
+                        textScale = textScale,
+                        onReadFullNewsClick = onReadFullNewsClick
                     )
 
-                    Spacer(modifier = Modifier.height(100.dp))
+                    Spacer(modifier = Modifier.height(60.dp))
                 }
-            }
-        }
-    }
-
-    if (showAiSummaryDialog) {
-        AiSummaryDialog(onDismiss = { showAiSummaryDialog = false })
-    }
-
-    if (isShared) {
-        LaunchedEffect(isShared) {
-            delay(2.seconds)
-            isShared = false
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 100.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = NeonViolet,
-                shadowElevation = 8.dp
-            ) {
-                Text(
-                    text = "🔗 Article link copied to clipboard!",
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-                )
             }
         }
     }
@@ -249,7 +198,9 @@ fun NewsDetailScreen(
 
 @Composable
 fun DetailTopBar(
+    category: String?,
     onBackClick: () -> Unit,
+    onShareClick: () -> Unit,
     onTextScaleDecrease: () -> Unit,
     onTextScaleIncrease: () -> Unit
 ) {
@@ -279,18 +230,35 @@ fun DetailTopBar(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (!category.isNullOrBlank()) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = SurfaceGlass,
+                    border = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.6f))
+                ) {
+                    Text(
+                        text = "⚡ $category",
+                        color = NeonCyan,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                    )
+                }
+            }
+
             Surface(
-                shape = RoundedCornerShape(16.dp),
+                shape = CircleShape,
                 color = SurfaceGlass,
-                border = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.6f))
+                border = BorderStroke(1.dp, BorderColor)
             ) {
-                Text(
-                    text = "⚡ QUANTUM TECH",
-                    color = NeonCyan,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                )
+                IconButton(onClick = onShareClick, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Share",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
 
             Surface(
@@ -358,7 +326,7 @@ fun DetailHeroSection(imageUrl: String?, title: String) {
 
 @Composable
 fun DetailHeaderContent(
-    title: String,
+    article: Article,
     textScale: Float,
     isAiVoicePlaying: Boolean,
     playbackProgress: Float,
@@ -369,7 +337,7 @@ fun DetailHeaderContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = title,
+            text = article.title,
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontSize = (26 * textScale).sp,
                 fontWeight = FontWeight.Bold,
@@ -397,15 +365,31 @@ fun DetailHeaderContent(
                         Icon(Icons.Default.Person, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(24.dp))
                     }
                 }
-                Column {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    if (!article.creator.isNullOrBlank()) {
+                        Text(
+                            text = article.creator,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
+                    }
                     Text(
-                        text = "Dr. Elian Vance",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        text = article.sourceName,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
+                        color = NeonCyan
                     )
+                    val dateAndReadingTime = buildString {
+                        if (!article.pubDate.isNullOrBlank()) {
+                            append("${article.pubDate} • ")
+                        }
+                        append(article.readingTime)
+                    }
                     Text(
-                        text = "Oct 15, 2026 • 4 min read",
+                        text = dateAndReadingTime,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )
@@ -502,7 +486,7 @@ fun AiKeyTakeawaysCard(textScale: Float) {
 }
 
 @Composable
-fun ArticleContentBody(article: Article, textScale: Float) {
+fun ArticleContentBody(article: Article, textScale: Float, onReadFullNewsClick: (String) -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -535,113 +519,40 @@ fun ArticleContentBody(article: Article, textScale: Float) {
                         .border(1.dp, BorderColor, RoundedCornerShape(16.dp)),
                     contentScale = ContentScale.Crop
                 )
-                Text(
-                    text = "Source Link: ${article.link}",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = (14 * textScale).sp),
-                    color = NeonCyan
-                )
             }
         }
-    }
-}
 
-@Composable
-fun FloatingBottomDeck(
-    isBookmarked: Boolean,
-    commentCount: Int,
-    onAiSummaryClick: () -> Unit,
-    onBookmarkClick: () -> Unit,
-    onShareClick: () -> Unit,
-    onCommentClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Surface(
-            modifier = Modifier
-                .height(64.dp)
-                .fillMaxWidth(0.9f)
-                .border(1.dp, Brush.horizontalGradient(listOf(NeonCyan, NeonViolet)), CircleShape),
-            shape = CircleShape,
-            color = Color(0xFF121826).copy(alpha = 0.85f),
-            shadowElevation = 12.dp
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onAiSummaryClick) {
-                    Icon(imageVector = Icons.Default.Info, contentDescription = "AI Summarize", tint = NeonCyan)
-                }
-
-                IconButton(onClick = onBookmarkClick) {
-                    val animScale by animateFloatAsState(
-                        targetValue = if (isBookmarked) 1.3f else 1f,
-                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-                    )
-                    Icon(
-                        imageVector = if (isBookmarked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Bookmark",
-                        tint = if (isBookmarked) NeonViolet else Color.White,
-                        modifier = Modifier.scale(animScale)
-                    )
-                }
-
-                IconButton(onClick = onShareClick) {
-                    Icon(imageVector = Icons.Default.Share, contentDescription = "Share", tint = Color.White)
-                }
-
-                BadgedBox(
-                    badge = {
-                        Badge(containerColor = NeonCyan, contentColor = DarkBackground) {
-                            Text("$commentCount", fontWeight = FontWeight.Bold)
-                        }
-                    }
-                ) {
-                    IconButton(onClick = onCommentClick) {
-                        Icon(imageVector = Icons.Default.Notifications, contentDescription = "Comments", tint = Color.White)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun AiSummaryDialog(onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = Color(0xFF121B2E),
-        shape = RoundedCornerShape(24.dp),
-        title = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.Star, contentDescription = null, tint = NeonCyan)
-                Text("AI Executive Briefing", color = Color.White, fontWeight = FontWeight.Bold)
-            }
-        },
-        text = {
-            Text(
-                text = "This article details groundbreaking advancements in quantum-neural integration. Key takeaways highlight a 340% increase in multi-agent efficiency and secure zero-day resistance, marking a major milestone for Q1 2027 deployments.",
-                color = Color.LightGray,
-                lineHeight = 22.sp
-            )
-        },
-        confirmButton = {
+        if (article.link.isNotBlank()) {
+            Spacer(modifier = Modifier.height(8.dp))
             Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = NeonCyan)
+                onClick = { onReadFullNewsClick(article.link) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(27.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = NeonCyan
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
             ) {
-                Text("Got it", color = DarkBackground, fontWeight = FontWeight.Bold)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = DarkBackground,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "⚡ Read Full News",
+                        color = DarkBackground,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
-    )
+    }
 }

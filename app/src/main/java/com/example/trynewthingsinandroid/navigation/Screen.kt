@@ -17,4 +17,14 @@ sealed class Screen(val route: String) {
     object NewsDetail : Screen("news_detail/{articleIndex}") {
         fun createRoute(articleIndex: Int) = "news_detail/$articleIndex"
     }
+
+    /**
+     * The web view screen displaying full news articles from source links.
+     */
+    object NewsWebView : Screen("news_web_view/{url}") {
+        fun createRoute(url: String): String {
+            val encodedUrl = java.net.URLEncoder.encode(url, "UTF-8")
+            return "news_web_view/$encodedUrl"
+        }
+    }
 }
