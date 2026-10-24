@@ -3,6 +3,8 @@ package com.example.trynewthingsinandroid.presentation
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.shared.domain.model.Avatar
+import com.example.shared.presentation.EditProfileUiState
 import com.example.trynewthingsinandroid.data.local.UserProfilePreferences
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,16 +31,21 @@ class EditProfileScreenViewModel(application: Application) : AndroidViewModel(ap
     }
 
     private fun loadProfile() {
+        val savedAvatarId = profilePrefs.getAvatarId()
         _uiState.value = EditProfileUiState(
             name = profilePrefs.getUserName(),
             email = profilePrefs.getUserEmail(),
-            avatarId = profilePrefs.getAvatarId()
+            avatar = Avatar.fromId(savedAvatarId)
         )
     }
 
     private fun saveProfile(name: String, email: String, avatarId: String) {
         profilePrefs.saveProfile(name, email, avatarId)
-        _uiState.value = EditProfileUiState(name = name, email = email, avatarId = avatarId)
+        _uiState.value = EditProfileUiState(
+            name = name,
+            email = email,
+            avatar = Avatar.fromId(avatarId)
+        )
         viewModelScope.launch {
             _uiEffect.emit(EditProfileScreenUIEffect.OnProfileUpdated)
         }

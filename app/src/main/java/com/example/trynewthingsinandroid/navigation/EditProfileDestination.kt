@@ -40,9 +40,7 @@ fun EditProfileDestination(
     }
 
     EditProfileScreen(
-        initialName = uiState.name,
-        initialEmail = uiState.email,
-        initialAvatarId = uiState.avatarId,
+        uiState = uiState,
         onSave = { name, email, avatar ->
             viewModel.onEvent(EditProfileScreenUIEvent.OnSaveClicked(name, email, avatar))
         },

@@ -46,4 +46,14 @@
     <string name="profile_version">Version 1.0.0</string>
     <string name="under_development_fmt">%s under development</string>
     <string name="profile_updated_successfully">Profile updated successfully</string>
+
+    <!-- Edit Profile -->
+    <string name="edit_profile_title">Edit Profile</string>
+    <string name="choose_avatar">Choose Avatar</string>
+    <string name="profile_details">Profile Details</string>
+    <string name="label_name">Name</string>
+    <string name="placeholder_name">Enter your name</string>
+    <string name="label_email">Email</string>
+    <string name="placeholder_email">Enter your email</string>
+    <string name="save_profile">Save Profile</string>
 </resources>

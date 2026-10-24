@@ -21,11 +21,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -41,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.shared.domain.model.Avatar
 import com.example.shared.domain.usecase.GetProfileOptionsUseCase
 import com.example.shared.ui.theme.ThemeManager
 
@@ -193,13 +189,7 @@ fun UserHeaderCard(
     textColor: Color,
     onClick: () -> Unit
 ) {
-    val avatarIcon = when (avatarId) {
-        "face" -> Icons.Default.Face
-        "account" -> Icons.Default.AccountCircle
-        "star" -> Icons.Default.Star
-        "shield" -> Icons.Default.Shield
-        else -> Icons.Default.Person
-    }
+    val avatar = Avatar.fromId(avatarId)
 
     Surface(
         shape = RoundedCornerShape(20.dp),
@@ -222,7 +212,7 @@ fun UserHeaderCard(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = avatarIcon,
+                        imageVector = avatar.icon,
                         contentDescription = null,
                         tint = neonCyan,
                         modifier = Modifier.size(32.dp)
