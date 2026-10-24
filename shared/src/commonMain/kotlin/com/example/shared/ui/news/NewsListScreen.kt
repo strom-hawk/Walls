@@ -16,7 +16,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -42,16 +41,15 @@ fun NewsListScreen(
     onArticleClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val categories by viewModel.categories.collectAsState()
+    val selectedCategory by viewModel.selectedCategory.collectAsState()
 
     // Interactive states
     var searchQuery by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("All") }
-    val categories = listOf("All", "Quantum", "Neural AI", "Space", "Cybernetics", "Biotech")
 
     // Dynamic Theme Colors
     val currentTheme = ThemeManager.currentTheme
     val neonCyan = currentTheme.accentColor
-    val neonViolet = currentTheme.accentColor.copy(alpha = 0.7f)
     val darkBackground = currentTheme.backgroundColor
     val surfaceGlass = currentTheme.cardColor
     val borderColor = currentTheme.accentColor.copy(alpha = 0.3f)
@@ -151,7 +149,7 @@ fun NewsListScreen(
                     items(categories) { category ->
                         val isSelected = selectedCategory == category
                         Surface(
-                            onClick = { selectedCategory = category },
+                            onClick = { viewModel.selectCategory(category) },
                             shape = RoundedCornerShape(20.dp),
                             color = if (isSelected) neonCyan.copy(alpha = 0.2f) else surfaceGlass,
                             border = BorderStroke(
@@ -218,8 +216,7 @@ fun NewsListScreen(
                         val matchesSearch = article.title.contains(searchQuery, ignoreCase = true) ||
                                 article.description.contains(searchQuery, ignoreCase = true)
                         val matchesCategory = selectedCategory == "All" ||
-                                article.title.contains(selectedCategory, ignoreCase = true) ||
-                                article.description.contains(selectedCategory, ignoreCase = true)
+                                article.category.equals(selectedCategory, ignoreCase = true)
                         matchesSearch && matchesCategory
                     }
 
@@ -245,7 +242,6 @@ fun NewsListScreen(
                                     article = article,
                                     onClick = { onArticleClick(article.articleId) },
                                     neonCyan = neonCyan,
-                                    neonViolet = neonViolet,
                                     surfaceGlass = surfaceGlass,
                                     borderColor = borderColor,
                                     textColor = textColor,
@@ -265,14 +261,11 @@ fun FuturisticArticleCard(
     article: Article,
     onClick: () -> Unit,
     neonCyan: Color,
-    neonViolet: Color,
     surfaceGlass: Color,
     borderColor: Color,
     textColor: Color,
     subtitleColor: Color
 ) {
-    var isBookmarked by remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -313,34 +306,6 @@ fun FuturisticArticleCard(
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-
-                    // Interactive Bookmark Button overlay on image
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(12.dp),
-                        shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.6f),
-                        border = BorderStroke(1.dp, borderColor)
-                    ) {
-                        IconButton(
-                            onClick = { isBookmarked = !isBookmarked },
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            val scale by animateFloatAsState(
-                                targetValue = if (isBookmarked) 1.3f else 1f,
-                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-                            )
-                            Icon(
-                                imageVector = if (isBookmarked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                contentDescription = "Bookmark",
-                                tint = if (isBookmarked) neonViolet else Color.White,
-                                modifier = Modifier
-                                    .size(18.dp)
-                                    .scale(scale)
                             )
                         }
                     }

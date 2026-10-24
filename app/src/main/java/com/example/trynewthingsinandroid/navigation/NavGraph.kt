@@ -205,10 +205,11 @@ fun AppNavHost(
                     onBackClick = {
                         navController.popBackStack()
                     },
-                    onEmailClick = { email ->
+                    onEmailClick = { email, subject, message ->
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
                             data = android.net.Uri.parse("mailto:$email")
-                            putExtra(Intent.EXTRA_SUBJECT, "Feedback for Samachar")
+                            putExtra(Intent.EXTRA_SUBJECT, subject)
+                            putExtra(Intent.EXTRA_TEXT, message)
                         }
                         try {
                             context.startActivity(intent)

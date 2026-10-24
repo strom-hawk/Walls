@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
@@ -38,15 +40,15 @@ import androidx.compose.ui.unit.sp
 import com.example.shared.ui.theme.*
 
 /**
- * Contact Us screen displaying customer feedback messages and support email.
+ * Contact Us screen displaying support details and email contact information.
  *
  * @param onBackClick Callback when the toolbar back button is clicked.
- * @param onEmailClick Callback when the email address is clicked.
+ * @param onEmailClick Callback when clicking the email address.
  */
 @Composable
 fun ContactUsScreen(
     onBackClick: () -> Unit,
-    onEmailClick: (String) -> Unit
+    onEmailClick: (String, String, String) -> Unit
 ) {
     val currentTheme = ThemeManager.currentTheme
     val darkBackground = currentTheme.backgroundColor
@@ -92,72 +94,74 @@ fun ContactUsScreen(
             }
         }
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
                 .padding(Spacing24),
-            contentAlignment = Alignment.Center
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            Spacer(modifier = Modifier.height(Spacing24))
+
+            // Header Icon Badge
+            Surface(
+                shape = CircleShape,
+                color = neonCyan.copy(alpha = 0.15f),
+                border = BorderStroke(1.5.dp, neonCyan),
+                modifier = Modifier.size(Spacing72)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Email,
+                        contentDescription = null,
+                        tint = neonCyan,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+            }
+
+            Text(
+                text = "We are happy to serve you.\nYour feedback is very important for us!",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = textColor,
+                    lineHeight = 24.sp
+                ),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(Spacing12))
+
+            // Direct Email Card
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onEmailClick("sauravsumanxs@gmail.com", "Samachar Feedback", "") },
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = surfaceGlass),
-                border = BorderStroke(Spacing1, borderColor),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                border = BorderStroke(1.dp, borderColor),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(Spacing28),
+                        .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(Spacing16)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = neonCyan.copy(alpha = 0.15f),
-                        border = BorderStroke(1.5.dp, neonCyan),
-                        modifier = Modifier.size(Spacing72)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.Email,
-                                contentDescription = null,
-                                tint = neonCyan,
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
-                    }
-
                     Text(
-                        text = "We are happy to serve you.\nYour feedback is very important for us",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = textColor,
-                            lineHeight = 24.sp
-                        ),
-                        textAlign = TextAlign.Center
+                        text = "Kindly mail us directly at",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = subtitleColor
                     )
-
-                    Spacer(modifier = Modifier.height(Spacing8))
-
-                    Text(
-                        text = "Kindly mail us at",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = subtitleColor,
-                        textAlign = TextAlign.Center
-                    )
-
                     Text(
                         text = "sauravsumanxs@gmail.com",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = neonCyan
-                        ),
-                        modifier = Modifier
-                            .clickable { onEmailClick("sauravsumanxs@gmail.com") }
-                            .padding(vertical = 8.dp),
-                        textAlign = TextAlign.Center
+                        )
                     )
                 }
             }
