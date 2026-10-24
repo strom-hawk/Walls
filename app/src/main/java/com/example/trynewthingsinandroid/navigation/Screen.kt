@@ -32,6 +32,11 @@ sealed class Screen(val route: String) {
     object ContactUs : Screen("contact_us")
 
     /**
+     * The edit profile screen.
+     */
+    object EditProfile : Screen("edit_profile")
+
+    /**
      * The news detail screen displaying a specific article by ID.
      */
     object NewsDetail : Screen("news_detail/{articleId}") {

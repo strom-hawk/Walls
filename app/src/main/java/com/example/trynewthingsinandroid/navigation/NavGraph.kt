@@ -52,6 +52,7 @@ import com.example.shared.ui.theme.ThemesScreen
 import com.example.trynewthingsinandroid.R
 import com.example.trynewthingsinandroid.data.local.BookmarkRepository
 import com.example.trynewthingsinandroid.data.local.NewsCacheManager
+import com.example.trynewthingsinandroid.data.local.UserProfilePreferences
 import com.example.trynewthingsinandroid.ui.news.BookmarkedNewsScreen
 import com.example.trynewthingsinandroid.ui.news.NewsWebViewScreen
 import kotlinx.coroutines.launch
@@ -166,7 +167,24 @@ fun AppNavHost(
             }
             composable(Screen.Profile.route) {
                 val context = LocalContext.current
+                val profilePrefs = remember { UserProfilePreferences(context) }
+                var userName by remember { mutableStateOf(profilePrefs.getUserName()) }
+                var userEmail by remember { mutableStateOf(profilePrefs.getUserEmail()) }
+                var avatarId by remember { mutableStateOf(profilePrefs.getAvatarId()) }
+
+                LaunchedEffect(Unit) {
+                    userName = profilePrefs.getUserName()
+                    userEmail = profilePrefs.getUserEmail()
+                    avatarId = profilePrefs.getAvatarId()
+                }
+
                 ProfileScreen(
+                    userName = userName,
+                    userEmail = userEmail,
+                    avatarId = avatarId,
+                    onHeaderClick = {
+                        navController.navigate(Screen.EditProfile.route)
+                    },
                     onItemClick = { itemName ->
                         val message = context.getString(R.string.under_development_fmt, itemName)
                         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
@@ -218,6 +236,9 @@ fun AppNavHost(
                         }
                     }
                 )
+            }
+            composable(Screen.EditProfile.route) {
+                EditProfileDestination(navController = navController)
             }
             composable(
                 route = Screen.NewsDetail.route,

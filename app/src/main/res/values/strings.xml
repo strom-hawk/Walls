@@ -45,4 +45,5 @@
     <string name="profile_option_contact_us">Contact us</string>
     <string name="profile_version">Version 1.0.0</string>
     <string name="under_development_fmt">%s under development</string>
+    <string name="profile_updated_successfully">Profile updated successfully</string>
 </resources>
