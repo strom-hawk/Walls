@@ -9,8 +9,12 @@ class GetNewsUseCase(
     companion object {
         private var cachedArticles: List<Article> = emptyList()
 
-        fun getCachedArticle(index: Int): Article? {
-            return cachedArticles.getOrNull(index)
+        fun getCachedArticleById(articleId: String): Article? {
+            return cachedArticles.find { it.articleId == articleId }
+        }
+
+        fun setCachedArticles(articles: List<Article>) {
+            cachedArticles = articles
         }
     }
 

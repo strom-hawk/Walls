@@ -26,11 +26,20 @@ import coil3.compose.AsyncImage
 import com.example.shared.domain.model.Article
 import com.example.shared.presentation.NewsUiState
 import com.example.shared.presentation.NewsListViewModel
+import com.example.shared.ui.theme.ThemeManager
 
+/**
+ * Main Home feed screen displaying Samachar news articles in a futuristic dark cyan theme.
+ * Features search filtering, category selection chips, state handling (loading, error, success),
+ * and interactive article card feeds.
+ *
+ * @param viewModel The ViewModel providing news feed state and fetch operations.
+ * @param onArticleClick Callback invoked when an article card is tapped, passing its unique articleId.
+ */
 @Composable
 fun NewsListScreen(
     viewModel: NewsListViewModel = remember { NewsListViewModel() },
-    onArticleClick: (Int) -> Unit
+    onArticleClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -39,15 +48,19 @@ fun NewsListScreen(
     var selectedCategory by remember { mutableStateOf("All") }
     val categories = listOf("All", "Quantum", "Neural AI", "Space", "Cybernetics", "Biotech")
 
-    // Futuristic Dark Theme Colors
-    val neonCyan = Color(0xFF00E5FF)
-    val neonViolet = Color(0xFF7C4DFF)
-    val darkBackground = Color(0xFF0A0E1A)
-    val surfaceGlass = Color(0xFF161D31).copy(alpha = 0.75f)
-    val borderColor = Color(0xFF2A3655).copy(alpha = 0.6f)
+    // Dynamic Theme Colors
+    val currentTheme = ThemeManager.currentTheme
+    val neonCyan = currentTheme.accentColor
+    val neonViolet = currentTheme.accentColor.copy(alpha = 0.7f)
+    val darkBackground = currentTheme.backgroundColor
+    val surfaceGlass = currentTheme.cardColor
+    val borderColor = currentTheme.accentColor.copy(alpha = 0.3f)
+    val textColor = if (currentTheme.isLight) Color.Black else Color.White
+    val subtitleColor = if (currentTheme.isLight) Color.DarkGray else Color.LightGray
 
     Scaffold(
         containerColor = darkBackground,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             // Futuristic Top App Bar & Search Header
             Column(
@@ -80,7 +93,7 @@ fun NewsListScreen(
                             text = "SAMACHAR",
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = textColor,
                                 letterSpacing = 1.5.sp
                             )
                         )
@@ -106,12 +119,12 @@ fun NewsListScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search Samachar articles...", color = Color.Gray) },
+                    placeholder = { Text("Search Samachar articles...", color = subtitleColor) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = neonCyan) },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
                             IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear", tint = Color.Gray)
+                                Icon(Icons.Default.Clear, contentDescription = "Clear", tint = subtitleColor)
                             }
                         }
                     },
@@ -124,8 +137,8 @@ fun NewsListScreen(
                         unfocusedContainerColor = surfaceGlass,
                         focusedBorderColor = neonCyan,
                         unfocusedBorderColor = borderColor,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor
                     ),
                     singleLine = true
                 )
@@ -148,7 +161,7 @@ fun NewsListScreen(
                         ) {
                             Text(
                                 text = category,
-                                color = if (isSelected) neonCyan else Color.LightGray,
+                                color = if (isSelected) neonCyan else subtitleColor,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -187,7 +200,7 @@ fun NewsListScreen(
                         )
                         Text(
                             text = "Connection Failed: ${state.message}",
-                            color = Color.White,
+                            color = textColor,
                             style = MaterialTheme.typography.bodyLarge,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
@@ -218,8 +231,8 @@ fun NewsListScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
-                            Text("No Samachar feeds found", color = Color.Gray, style = MaterialTheme.typography.bodyLarge)
+                            Icon(Icons.Default.Search, contentDescription = null, tint = subtitleColor, modifier = Modifier.size(48.dp))
+                            Text("No Samachar feeds found", color = subtitleColor, style = MaterialTheme.typography.bodyLarge)
                         }
                     } else {
                         LazyColumn(
@@ -228,14 +241,15 @@ fun NewsListScreen(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             items(filteredArticles, key = { it.articleId }) { article ->
-                                val originalIndex = state.articles.indexOf(article)
                                 FuturisticArticleCard(
                                     article = article,
-                                    onClick = { onArticleClick(originalIndex) },
+                                    onClick = { onArticleClick(article.articleId) },
                                     neonCyan = neonCyan,
                                     neonViolet = neonViolet,
                                     surfaceGlass = surfaceGlass,
-                                    borderColor = borderColor
+                                    borderColor = borderColor,
+                                    textColor = textColor,
+                                    subtitleColor = subtitleColor
                                 )
                             }
                         }
@@ -253,7 +267,9 @@ fun FuturisticArticleCard(
     neonCyan: Color,
     neonViolet: Color,
     surfaceGlass: Color,
-    borderColor: Color
+    borderColor: Color,
+    textColor: Color,
+    subtitleColor: Color
 ) {
     var isBookmarked by remember { mutableStateOf(false) }
 
@@ -341,7 +357,7 @@ fun FuturisticArticleCard(
                     text = article.title,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = textColor,
                         lineHeight = 22.sp
                     ),
                     maxLines = 2
@@ -351,48 +367,30 @@ fun FuturisticArticleCard(
                     Text(
                         text = article.description,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.LightGray,
-                        maxLines = 2
+                        color = subtitleColor,
+                        maxLines = 3
                     )
                 }
 
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val metaText = buildString {
-                        append(article.sourceName)
-                        if (!article.pubDate.isNullOrBlank()) {
-                            append(" • ${article.pubDate}")
-                        }
-                        append(" • ${article.readingTime}")
-                    }
                     Text(
-                        text = metaText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        text = article.sourceName,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = neonCyan,
+                        fontWeight = FontWeight.SemiBold
                     )
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = neonCyan,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = "Verified",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = neonCyan,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Text(
+                        text = article.readingTime,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = subtitleColor
+                    )
                 }
             }
         }

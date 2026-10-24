@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class NewsDetailsScreenViewModel(
-    private val articleIndex: Int
+    private val articleId: String
 ) {
-    private val _article = MutableStateFlow<Article?>(GetNewsUseCase.getCachedArticle(articleIndex))
+    private val _article = MutableStateFlow<Article?>(GetNewsUseCase.getCachedArticleById(articleId))
     val article: StateFlow<Article?> = _article.asStateFlow()
 }

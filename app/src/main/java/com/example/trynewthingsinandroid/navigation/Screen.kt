@@ -7,15 +7,33 @@ package com.example.trynewthingsinandroid.navigation
  */
 sealed class Screen(val route: String) {
     /**
-     * The news list screen displaying Samachar feeds.
+     * The news list screen displaying Samachar feeds (Home).
      */
     object NewsList : Screen("news_list")
 
     /**
-     * The news detail screen displaying a specific article by index.
+     * The user profile screen.
      */
-    object NewsDetail : Screen("news_detail/{articleIndex}") {
-        fun createRoute(articleIndex: Int) = "news_detail/$articleIndex"
+    object Profile : Screen("profile")
+
+    /**
+     * The themes selection screen.
+     */
+    object Themes : Screen("themes")
+
+    /**
+     * The bookmarked news screen.
+     */
+    object BookmarkedNews : Screen("bookmarked_news")
+
+    /**
+     * The news detail screen displaying a specific article by ID.
+     */
+    object NewsDetail : Screen("news_detail/{articleId}") {
+        fun createRoute(articleId: String): String {
+            val encodedId = java.net.URLEncoder.encode(articleId, "UTF-8")
+            return "news_detail/$encodedId"
+        }
     }
 
     /**
