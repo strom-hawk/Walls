@@ -25,12 +25,12 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.shared.domain.model.Article
 import com.example.shared.presentation.NewsUiState
-import com.example.shared.presentation.NewsViewModel
+import com.example.shared.presentation.NewsListViewModel
 
 @Composable
 fun NewsListScreen(
-    viewModel: NewsViewModel = remember { NewsViewModel() },
-    onArticleClick: (Article) -> Unit
+    viewModel: NewsListViewModel = remember { NewsListViewModel() },
+    onArticleClick: (Int) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -77,7 +77,7 @@ fun NewsListScreen(
                             }
                         }
                         Text(
-                            text = "NEXUS FEED",
+                            text = "SAMACHAR",
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
@@ -106,7 +106,7 @@ fun NewsListScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search quantum articles...", color = Color.Gray) },
+                    placeholder = { Text("Search Samachar articles...", color = Color.Gray) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = neonCyan) },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
@@ -219,7 +219,7 @@ fun NewsListScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
-                            Text("No quantum feeds found", color = Color.Gray, style = MaterialTheme.typography.bodyLarge)
+                            Text("No Samachar feeds found", color = Color.Gray, style = MaterialTheme.typography.bodyLarge)
                         }
                     } else {
                         LazyColumn(
@@ -228,9 +228,10 @@ fun NewsListScreen(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             items(filteredArticles, key = { it.articleId }) { article ->
+                                val originalIndex = state.articles.indexOf(article)
                                 FuturisticArticleCard(
                                     article = article,
-                                    onClick = { onArticleClick(article) },
+                                    onClick = { onArticleClick(originalIndex) },
                                     neonCyan = neonCyan,
                                     neonViolet = neonViolet,
                                     surfaceGlass = surfaceGlass,

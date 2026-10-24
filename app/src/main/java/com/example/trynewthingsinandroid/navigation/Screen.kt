@@ -1,7 +1,5 @@
 package com.example.trynewthingsinandroid.navigation
 
-import com.example.trynewthingsinandroid.utils.Constants
-
 /**
  * Represents the different screens/destinations in the application.
  *
@@ -9,19 +7,14 @@ import com.example.trynewthingsinandroid.utils.Constants
  */
 sealed class Screen(val route: String) {
     /**
-     * The home screen displaying the wallpaper gallery.
+     * The news list screen displaying Samachar feeds.
      */
-    object Home : Screen("home")
+    object NewsList : Screen("news_list")
 
     /**
-     * The detail screen displaying a specific image.
+     * The news detail screen displaying a specific article by index.
      */
-    object Detail : Screen("detail/{${Constants.IMAGE_ID}}") {
-        /**
-         * Creates a navigation route for a specific image ID.
-         *
-         * @param imageId The unique identifier of the image.
-         */
-        fun createRoute(imageId: String) = "detail/$imageId"
+    object NewsDetail : Screen("news_detail/{articleIndex}") {
+        fun createRoute(articleIndex: Int) = "news_detail/$articleIndex"
     }
 }
