@@ -23,12 +23,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -155,10 +159,7 @@ fun NewsDetailScreen(
                         borderColor = borderColor,
                         neonCyan = neonCyan,
                         textColor = textColor,
-                        isBookmarked = isBookmarked,
-                        onBookmarkClick = { onEvent(NewsDetailUIEvent.OnBookmarkClicked) },
                         onBackClick = { onEvent(NewsDetailUIEvent.OnBackClicked) },
-                        onShareClick = { onEvent(NewsDetailUIEvent.OnShareClicked(currentArticle.title, currentArticle.link)) },
                         onTextScaleDecrease = { if (textScale > 0.8f) textScale -= 0.1f },
                         onTextScaleIncrease = { if (textScale < 1.4f) textScale += 0.1f }
                     )
@@ -179,29 +180,40 @@ fun NewsDetailScreen(
                     DetailHeaderContent(
                         article = currentArticle,
                         textScale = textScale,
-                        isAiVoicePlaying = isAiVoicePlaying,
-                        playbackProgress = playbackProgress,
-                        surfaceGlass = surfaceGlass,
                         neonCyan = neonCyan,
                         neonViolet = neonViolet,
                         textColor = textColor,
-                        subtitleColor = subtitleColor,
+                        subtitleColor = subtitleColor
+                    )
+
+                    // Unified Action Control Center (Listen as Primary CTA)
+                    ActionControlCenter(
+                        articleUrl = currentArticle.link,
+                        articleTitle = currentArticle.title,
+                        isBookmarked = isBookmarked,
+                        isAiVoicePlaying = isAiVoicePlaying,
+                        playbackProgress = playbackProgress,
+                        surfaceGlass = surfaceGlass,
+                        borderColor = borderColor,
+                        neonCyan = neonCyan,
+                        textColor = textColor,
+                        onReadFullNewsClick = { url -> onEvent(NewsDetailUIEvent.OnReadFullNewsClicked(url)) },
                         onListenClick = {
                             isAiVoicePlaying = !isAiVoicePlaying
                             if (!isAiVoicePlaying) {
                                 playbackProgress = 0f
                                 ttsPlayer.stop()
                             }
-                        }
+                        },
+                        onBookmarkClick = { onEvent(NewsDetailUIEvent.OnBookmarkClicked) },
+                        onShareClick = { title, url -> onEvent(NewsDetailUIEvent.OnShareClicked(title, url)) }
                     )
 
                     ArticleContentBody(
                         article = currentArticle,
                         textScale = textScale,
-                        neonCyan = neonCyan,
                         borderColor = borderColor,
-                        textColor = textColor,
-                        onReadFullNewsClick = { url -> onEvent(NewsDetailUIEvent.OnReadFullNewsClicked(url)) }
+                        textColor = textColor
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -240,7 +252,7 @@ fun HandleTextToSpeechPlayback(
 
             while (isAiVoicePlaying && progress < 1f) {
                 delay(stepTime)
-                progress += 0.02f
+                progress = (progress + 0.02f).coerceAtMost(1f)
                 onProgressUpdate(progress)
             }
         } else {
@@ -259,10 +271,7 @@ fun DetailTopBar(
     borderColor: Color,
     neonCyan: Color,
     textColor: Color,
-    isBookmarked: Boolean,
-    onBookmarkClick: () -> Unit,
     onBackClick: () -> Unit,
-    onShareClick: () -> Unit,
     onTextScaleDecrease: () -> Unit,
     onTextScaleIncrease: () -> Unit
 ) {
@@ -304,36 +313,6 @@ fun DetailTopBar(
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
-                }
-            }
-
-            Surface(
-                shape = CircleShape,
-                color = surfaceGlass,
-                border = BorderStroke(1.dp, borderColor)
-            ) {
-                IconButton(onClick = onShareClick, modifier = Modifier.size(36.dp)) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = "Share",
-                        tint = textColor,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-
-            Surface(
-                shape = CircleShape,
-                color = surfaceGlass,
-                border = BorderStroke(1.dp, borderColor)
-            ) {
-                IconButton(onClick = onBookmarkClick, modifier = Modifier.size(36.dp)) {
-                    Icon(
-                        imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Bookmark",
-                        tint = if (isBookmarked) neonCyan else textColor,
-                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -405,14 +384,10 @@ fun DetailHeroSection(imageUrl: String?, title: String, neonViolet: Color, darkB
 fun DetailHeaderContent(
     article: Article,
     textScale: Float,
-    isAiVoicePlaying: Boolean,
-    playbackProgress: Float,
-    surfaceGlass: Color,
     neonCyan: Color,
     neonViolet: Color,
     textColor: Color,
-    subtitleColor: Color,
-    onListenClick: () -> Unit
+    subtitleColor: Color
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -477,31 +452,164 @@ fun DetailHeaderContent(
                     )
                 }
             }
+        }
+    }
+}
 
-            Surface(
+@Composable
+fun ActionControlCenter(
+    articleUrl: String,
+    articleTitle: String,
+    isBookmarked: Boolean,
+    isAiVoicePlaying: Boolean,
+    playbackProgress: Float,
+    surfaceGlass: Color,
+    borderColor: Color,
+    neonCyan: Color,
+    textColor: Color,
+    onReadFullNewsClick: (String) -> Unit,
+    onListenClick: () -> Unit,
+    onBookmarkClick: () -> Unit,
+    onShareClick: (String, String) -> Unit
+) {
+    val progressPercentage = (playbackProgress * 100).toInt().coerceIn(0, 100)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = surfaceGlass),
+        border = BorderStroke(1.dp, borderColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            // Primary Action CTA: Listen (TTS Audio Player)
+            Button(
                 onClick = onListenClick,
-                shape = CircleShape,
-                color = if (isAiVoicePlaying) neonCyan.copy(alpha = 0.2f) else surfaceGlass,
-                border = BorderStroke(1.5.dp, if (isAiVoicePlaying) neonCyan else neonViolet),
-                shadowElevation = 6.dp
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isAiVoicePlaying) neonCyan.copy(alpha = 0.85f) else neonCyan
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.PlayArrow,
+                        imageVector = if (isAiVoicePlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Listen AI Voice",
-                        tint = if (isAiVoicePlaying) neonCyan else textColor,
-                        modifier = Modifier.size(16.dp)
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = if (isAiVoicePlaying) "Playing ${(playbackProgress * 100).toInt()}%" else "Listen",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (isAiVoicePlaying) neonCyan else textColor,
+                        text = if (isAiVoicePlaying) "Playing $progressPercentage%" else "Listen AI Voice",
+                        color = Color.Black,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
+                }
+            }
+
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = borderColor.copy(alpha = 0.5f)
+            )
+
+            // Secondary Quick Actions Row: Read Full News, Bookmark, Share
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Read Full News Action
+                if (articleUrl.isNotBlank()) {
+                    Surface(
+                        onClick = { onReadFullNewsClick(articleUrl) },
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color.Transparent,
+                        border = BorderStroke(1.dp, borderColor)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                tint = neonCyan,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = "Read Full News",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = textColor,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                // Bookmark Action
+                Surface(
+                    onClick = onBookmarkClick,
+                    shape = RoundedCornerShape(16.dp),
+                    color = if (isBookmarked) neonCyan.copy(alpha = 0.2f) else Color.Transparent,
+                    border = BorderStroke(1.dp, if (isBookmarked) neonCyan else borderColor)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = "Bookmark",
+                            tint = if (isBookmarked) neonCyan else textColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = if (isBookmarked) "Bookmarked" else "Bookmark",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (isBookmarked) neonCyan else textColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // Share Action
+                Surface(
+                    onClick = { onShareClick(articleTitle, articleUrl) },
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.Transparent,
+                    border = BorderStroke(1.dp, borderColor)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share",
+                            tint = textColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "Share",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = textColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -512,10 +620,8 @@ fun DetailHeaderContent(
 fun ArticleContentBody(
     article: Article,
     textScale: Float,
-    neonCyan: Color,
     borderColor: Color,
-    textColor: Color,
-    onReadFullNewsClick: (String) -> Unit
+    textColor: Color
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -549,39 +655,6 @@ fun ArticleContentBody(
                         .border(1.dp, borderColor, RoundedCornerShape(16.dp)),
                     contentScale = ContentScale.Crop
                 )
-            }
-        }
-
-        if (article.link.isNotBlank()) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = { onReadFullNewsClick(article.link) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp),
-                shape = RoundedCornerShape(27.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = neonCyan
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = "⚡ Read Full News",
-                        color = Color.Black,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
         }
     }
