@@ -1,0 +1,20 @@
+<resources>
+    <string name="edit_profile_title">Edit Profile</string>
+    <string name="choose_avatar">Choose Avatar</string>
+    <string name="profile_details">Profile Details</string>
+    <string name="label_name">Name</string>
+    <string name="placeholder_name">Enter your name</string>
+    <string name="label_email">Email</string>
+    <string name="placeholder_email">Enter your email</string>
+    <string name="save_profile">Save Profile</string>
+
+    <!-- News Detail -->
+    <string name="article_not_found_title">Article Not Found</string>
+    <string name="article_not_found_desc">This article is no longer cached in memory. Please return to the news feed to explore the latest Samachar feeds.</string>
+    <string name="article_not_found_cta">⚡ Return to News Feed</string>
+    <string name="listen_ai_voice">Listen AI Voice</string>
+    <string name="listen">Listen</string>
+    <string name="playing_progress">Playing %d%%</string>
+    <string name="read_full_news">⚡ Read Full News</string>
+    <string name="article_illustration">Article Illustration</string>
+</resources>

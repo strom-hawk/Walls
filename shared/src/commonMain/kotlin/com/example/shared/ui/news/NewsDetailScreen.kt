@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,12 +26,8 @@ import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,7 +38,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,36 +55,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.shared.domain.model.Article
-import com.example.shared.presentation.NewsDetailsScreenViewModel
+import com.example.shared.presentation.NewsDetailUiState
+import com.example.shared.presentation.NewsDetailUIEvent
 import com.example.shared.ui.theme.ThemeManager
+import com.example.shared.util.TextToSpeechPlayer
 import com.example.shared.util.rememberTextToSpeechPlayer
 import kotlinx.coroutines.delay
 
 /**
- * Detailed view screen for a selected news article.
- * Displays article hero image, title, creator, publication date, text-to-speech audio player,
- * AI key takeaways summary card, body text, and full news link.
+ * Detailed view screen for a selected news article using MVI architecture.
  *
- * @param articleId Unique identifier of the article to display.
- * @param viewModel ViewModel fetching the detailed article data.
- * @param isBookmarked Whether the article is bookmarked.
- * @param onBookmarkClick Callback when the bookmark button is clicked.
- * @param onBackClick Callback when the back navigation button is clicked.
- * @param onReadFullNewsClick Callback when "Read Full News" button is clicked, passing article URL.
- * @param onShareClick Callback when share button is clicked, passing title and article link.
+ * @param uiState State containing article details, bookmark status, and loading state.
+ * @param onEvent Callback dispatching user UI events.
  */
 @Composable
 fun NewsDetailScreen(
-    articleId: String,
-    viewModel: NewsDetailsScreenViewModel = remember(articleId) { NewsDetailsScreenViewModel(articleId) },
-    isBookmarked: Boolean = false,
-    onBookmarkClick: () -> Unit = {},
-    onBackClick: () -> Unit,
-    onReadFullNewsClick: (String) -> Unit = {},
-    onShareClick: (String, String) -> Unit = { _, _ -> }
+    uiState: NewsDetailUiState,
+    onEvent: (NewsDetailUIEvent) -> Unit
 ) {
-    val article by viewModel.article.collectAsState()
-
     val currentTheme = ThemeManager.currentTheme
     val darkBackground = currentTheme.backgroundColor
     val neonCyan = currentTheme.accentColor
@@ -100,18 +82,26 @@ fun NewsDetailScreen(
     val textColor = if (currentTheme.isLight) Color.Black else Color.White
     val subtitleColor = if (currentTheme.isLight) Color.DarkGray else Color.LightGray
 
-    if (article == null) {
+    if (uiState.isLoading) {
+        Box(modifier = Modifier.fillMaxSize().background(darkBackground), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = neonCyan)
+        }
+        return
+    }
+
+    val currentArticle = uiState.article
+    if (currentArticle == null) {
         ArticleNotFoundScreen(
             title = "Article Not Found",
             description = "This article is no longer cached in memory. Please return to the news feed to explore the latest Samachar feeds.",
             ctaText = "⚡ Return to News Feed",
-            onCtaClick = onBackClick,
-            onBackClick = onBackClick
+            onCtaClick = { onEvent(NewsDetailUIEvent.OnBackClicked) },
+            onBackClick = { onEvent(NewsDetailUIEvent.OnBackClicked) }
         )
         return
     }
 
-    val currentArticle = article!!
+    val isBookmarked = uiState.isBookmarked
 
     // State management
     var textScale by remember { mutableStateOf(1f) }
@@ -125,31 +115,14 @@ fun NewsDetailScreen(
         }
     )
 
-    // Handle AI voice playback simulation & TTS speech
-    LaunchedEffect(isAiVoicePlaying) {
-        if (isAiVoicePlaying) {
-            val fullText = buildString {
-                append("${currentArticle.title}. ")
-                if (currentArticle.description.isNotBlank()) {
-                    append(currentArticle.description)
-                }
-            }
-            ttsPlayer.speak(fullText)
-            playbackProgress = 0f
-
-            val wordCount = fullText.split("\\s+".toRegex()).size
-            val estimatedDurationMs = (wordCount * 300L).coerceIn(4000L, 60000L)
-            val stepTime = estimatedDurationMs / 50
-
-            while (isAiVoicePlaying && playbackProgress < 1f) {
-                delay(stepTime)
-                playbackProgress += 0.02f
-            }
-        } else {
-            ttsPlayer.stop()
-            playbackProgress = 0f
-        }
-    }
+    // Extracted TTS audio playback handling function
+    HandleTextToSpeechPlayback(
+        isAiVoicePlaying = isAiVoicePlaying,
+        title = currentArticle.title,
+        description = currentArticle.description,
+        ttsPlayer = ttsPlayer,
+        onProgressUpdate = { playbackProgress = it }
+    )
 
     Scaffold(
         containerColor = darkBackground
@@ -183,9 +156,9 @@ fun NewsDetailScreen(
                         neonCyan = neonCyan,
                         textColor = textColor,
                         isBookmarked = isBookmarked,
-                        onBookmarkClick = onBookmarkClick,
-                        onBackClick = onBackClick,
-                        onShareClick = { onShareClick(currentArticle.title, currentArticle.link) },
+                        onBookmarkClick = { onEvent(NewsDetailUIEvent.OnBookmarkClicked) },
+                        onBackClick = { onEvent(NewsDetailUIEvent.OnBackClicked) },
+                        onShareClick = { onEvent(NewsDetailUIEvent.OnShareClicked(currentArticle.title, currentArticle.link)) },
                         onTextScaleDecrease = { if (textScale > 0.8f) textScale -= 0.1f },
                         onTextScaleIncrease = { if (textScale < 1.4f) textScale += 0.1f }
                     )
@@ -222,26 +195,57 @@ fun NewsDetailScreen(
                         }
                     )
 
-                    AiKeyTakeawaysCard(
-                        textScale = textScale,
-                        surfaceGlass = surfaceGlass,
-                        neonCyan = neonCyan,
-                        neonViolet = neonViolet,
-                        textColor = textColor
-                    )
-
                     ArticleContentBody(
                         article = currentArticle,
                         textScale = textScale,
                         neonCyan = neonCyan,
                         borderColor = borderColor,
                         textColor = textColor,
-                        onReadFullNewsClick = onReadFullNewsClick
+                        onReadFullNewsClick = { url -> onEvent(NewsDetailUIEvent.OnReadFullNewsClicked(url)) }
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
+        }
+    }
+}
+
+/**
+ * Handles text-to-speech audio playback simulation in a separate side-effect function.
+ */
+@Composable
+fun HandleTextToSpeechPlayback(
+    isAiVoicePlaying: Boolean,
+    title: String,
+    description: String,
+    ttsPlayer: TextToSpeechPlayer,
+    onProgressUpdate: (Float) -> Unit
+) {
+    LaunchedEffect(isAiVoicePlaying) {
+        if (isAiVoicePlaying) {
+            val fullText = buildString {
+                append("$title. ")
+                if (description.isNotBlank()) {
+                    append(description)
+                }
+            }
+            ttsPlayer.speak(fullText)
+            onProgressUpdate(0f)
+
+            val wordCount = fullText.split("\\s+".toRegex()).size
+            val estimatedDurationMs = (wordCount * 300L).coerceIn(4000L, 60000L)
+            val stepTime = estimatedDurationMs / 50
+            var progress = 0f
+
+            while (isAiVoicePlaying && progress < 1f) {
+                delay(stepTime)
+                progress += 0.02f
+                onProgressUpdate(progress)
+            }
+        } else {
+            ttsPlayer.stop()
+            onProgressUpdate(0f)
         }
     }
 }
@@ -497,71 +501,6 @@ fun DetailHeaderContent(
                         style = MaterialTheme.typography.labelMedium,
                         color = if (isAiVoicePlaying) neonCyan else textColor,
                         fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun AiKeyTakeawaysCard(
-    textScale: Float,
-    surfaceGlass: Color,
-    neonCyan: Color,
-    neonViolet: Color,
-    textColor: Color
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = surfaceGlass),
-        border = BorderStroke(1.dp, Brush.linearGradient(listOf(neonCyan, neonViolet)))
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = neonCyan,
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    text = "⚡ AI Key Takeaways",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = neonCyan
-                )
-            }
-
-            val summaryPoints = listOf(
-                "Breakthrough neural-core architecture increases multi-agent processing efficiency by 340%.",
-                "Quantum encryption layer successfully tested against zero-day quantum simulation attacks.",
-                "Commercial deployment slated for Q1 2027 across decentralized cloud grids."
-            )
-
-            summaryPoints.forEach { point ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 6.dp)
-                            .size(6.dp)
-                            .background(neonViolet, CircleShape)
-                    )
-                    Text(
-                        text = point,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = (12.5 * textScale).sp),
-                        color = textColor.copy(alpha = 0.85f),
-                        lineHeight = (18 * textScale).sp
                     )
                 }
             }
