@@ -134,7 +134,7 @@ fun NewsDetailScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                //.padding(paddingValues)
         ) {
             Column(
                 modifier = Modifier
