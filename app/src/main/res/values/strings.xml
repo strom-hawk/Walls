@@ -56,4 +56,8 @@
     <string name="label_email">Email</string>
     <string name="placeholder_email">Enter your email</string>
     <string name="save_profile">Save Profile</string>
+
+    <!-- Contact Us -->
+    <string name="contact_us_mail_prompt">Kindly mail us directly at</string>
+    <string name="no_email_app_found">No email app found</string>
 </resources>
