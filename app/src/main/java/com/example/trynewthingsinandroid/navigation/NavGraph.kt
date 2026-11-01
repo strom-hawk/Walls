@@ -25,7 +25,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,19 +40,17 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.shared.domain.usecase.GetNewsUseCase
 import com.example.shared.presentation.NewsListViewModel
-import com.example.shared.ui.news.NewsDetailScreen
 import com.example.shared.ui.news.NewsListScreen
+import com.example.shared.ui.profile.ContactUsScreen
 import com.example.shared.ui.profile.ProfileScreen
 import com.example.shared.ui.theme.ThemeManager
 import com.example.shared.ui.theme.ThemesScreen
 import com.example.trynewthingsinandroid.R
-import com.example.trynewthingsinandroid.data.local.BookmarkRepository
 import com.example.trynewthingsinandroid.data.local.NewsCacheManager
+import com.example.trynewthingsinandroid.data.local.UserProfilePreferences
 import com.example.trynewthingsinandroid.ui.news.BookmarkedNewsScreen
 import com.example.trynewthingsinandroid.ui.news.NewsWebViewScreen
-import kotlinx.coroutines.launch
 
 /**
  * The main navigation host for the application.
@@ -165,7 +162,24 @@ fun AppNavHost(
             }
             composable(Screen.Profile.route) {
                 val context = LocalContext.current
+                val profilePrefs = remember { UserProfilePreferences(context) }
+                var userName by remember { mutableStateOf(profilePrefs.getUserName()) }
+                var userEmail by remember { mutableStateOf(profilePrefs.getUserEmail()) }
+                var avatarId by remember { mutableStateOf(profilePrefs.getAvatarId()) }
+
+                LaunchedEffect(Unit) {
+                    userName = profilePrefs.getUserName()
+                    userEmail = profilePrefs.getUserEmail()
+                    avatarId = profilePrefs.getAvatarId()
+                }
+
                 ProfileScreen(
+                    userName = userName,
+                    userEmail = userEmail,
+                    avatarId = avatarId,
+                    onHeaderClick = {
+                        navController.navigate(Screen.EditProfile.route)
+                    },
                     onItemClick = { itemName ->
                         val message = context.getString(R.string.under_development_fmt, itemName)
                         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
@@ -175,6 +189,9 @@ fun AppNavHost(
                     },
                     onBookmarkedNewsClick = {
                         navController.navigate(Screen.BookmarkedNews.route)
+                    },
+                    onContactUsClick = {
+                        navController.navigate(Screen.ContactUs.route)
                     }
                 )
             }
@@ -195,56 +212,34 @@ fun AppNavHost(
                     }
                 )
             }
-            composable(
-                route = Screen.NewsDetail.route,
-                arguments = listOf(navArgument("articleId") { type = NavType.StringType })
-            ) { backStackEntry ->
+            composable(Screen.ContactUs.route) {
                 val context = LocalContext.current
-                val encodedId = backStackEntry.arguments?.getString("articleId") ?: ""
-                val articleId = java.net.URLDecoder.decode(encodedId, "UTF-8")
-                val bookmarkRepository = remember { BookmarkRepository(context) }
-                val coroutineScope = rememberCoroutineScope()
-
-                var isBookmarked by remember(articleId) { mutableStateOf(false) }
-
-                LaunchedEffect(articleId) {
-                    isBookmarked = bookmarkRepository.isBookmarked(articleId)
-                }
-
-                val article = GetNewsUseCase.getCachedArticleById(articleId)
-
-                NewsDetailScreen(
-                    articleId = articleId,
-                    isBookmarked = isBookmarked,
-                    onBookmarkClick = {
-                        coroutineScope.launch {
-                            isBookmarked = !isBookmarked
-                            if (isBookmarked && article != null) {
-                                bookmarkRepository.addBookmark(article)
-                                Toast.makeText(context, "News Bookmarked", Toast.LENGTH_SHORT).show()
-                            } else {
-                                bookmarkRepository.removeBookmark(articleId)
-                                Toast.makeText(context, "Bookmark removed", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    },
+                ContactUsScreen(
                     onBackClick = {
                         navController.popBackStack()
                     },
-                    onReadFullNewsClick = { url ->
-                        navController.navigate(Screen.NewsWebView.createRoute(url))
-                    },
-                    onShareClick = { title, url ->
-                        val sendIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_SUBJECT, title)
-                            putExtra(Intent.EXTRA_TEXT, "$title\n$url")
-                            type = "text/plain"
+                    onEmailClick = { email, subject, message ->
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = android.net.Uri.parse("mailto:$email")
+                            putExtra(Intent.EXTRA_SUBJECT, subject)
+                            putExtra(Intent.EXTRA_TEXT, message)
                         }
-                        val shareIntent = Intent.createChooser(sendIntent, null)
-                        context.startActivity(shareIntent)
+                        try {
+                            context.startActivity(intent)
+                        } catch (_: Exception) {
+                            Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 )
+            }
+            composable(Screen.EditProfile.route) {
+                EditProfileDestination(navController = navController)
+            }
+            composable(
+                route = Screen.NewsDetail.route,
+                arguments = listOf(navArgument("articleId") { type = NavType.StringType })
+            ) {
+                NewsDetailDestination(navController = navController)
             }
             composable(
                 route = Screen.NewsWebView.route,

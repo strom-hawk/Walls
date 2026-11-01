@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,16 +23,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,7 +42,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,36 +59,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.shared.domain.model.Article
-import com.example.shared.presentation.NewsDetailsScreenViewModel
+import com.example.shared.presentation.NewsDetailUiState
+import com.example.shared.presentation.NewsDetailUIEvent
 import com.example.shared.ui.theme.ThemeManager
+import com.example.shared.util.TextToSpeechPlayer
 import com.example.shared.util.rememberTextToSpeechPlayer
 import kotlinx.coroutines.delay
 
 /**
- * Detailed view screen for a selected news article.
- * Displays article hero image, title, creator, publication date, text-to-speech audio player,
- * AI key takeaways summary card, body text, and full news link.
+ * Detailed view screen for a selected news article using MVI architecture.
  *
- * @param articleId Unique identifier of the article to display.
- * @param viewModel ViewModel fetching the detailed article data.
- * @param isBookmarked Whether the article is bookmarked.
- * @param onBookmarkClick Callback when the bookmark button is clicked.
- * @param onBackClick Callback when the back navigation button is clicked.
- * @param onReadFullNewsClick Callback when "Read Full News" button is clicked, passing article URL.
- * @param onShareClick Callback when share button is clicked, passing title and article link.
+ * @param uiState State containing article details, bookmark status, and loading state.
+ * @param onEvent Callback dispatching user UI events.
  */
 @Composable
 fun NewsDetailScreen(
-    articleId: String,
-    viewModel: NewsDetailsScreenViewModel = remember(articleId) { NewsDetailsScreenViewModel(articleId) },
-    isBookmarked: Boolean = false,
-    onBookmarkClick: () -> Unit = {},
-    onBackClick: () -> Unit,
-    onReadFullNewsClick: (String) -> Unit = {},
-    onShareClick: (String, String) -> Unit = { _, _ -> }
+    uiState: NewsDetailUiState,
+    onEvent: (NewsDetailUIEvent) -> Unit
 ) {
-    val article by viewModel.article.collectAsState()
-
     val currentTheme = ThemeManager.currentTheme
     val darkBackground = currentTheme.backgroundColor
     val neonCyan = currentTheme.accentColor
@@ -100,18 +86,26 @@ fun NewsDetailScreen(
     val textColor = if (currentTheme.isLight) Color.Black else Color.White
     val subtitleColor = if (currentTheme.isLight) Color.DarkGray else Color.LightGray
 
-    if (article == null) {
+    if (uiState.isLoading) {
+        Box(modifier = Modifier.fillMaxSize().background(darkBackground), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = neonCyan)
+        }
+        return
+    }
+
+    val currentArticle = uiState.article
+    if (currentArticle == null) {
         ArticleNotFoundScreen(
             title = "Article Not Found",
             description = "This article is no longer cached in memory. Please return to the news feed to explore the latest Samachar feeds.",
             ctaText = "⚡ Return to News Feed",
-            onCtaClick = onBackClick,
-            onBackClick = onBackClick
+            onCtaClick = { onEvent(NewsDetailUIEvent.OnBackClicked) },
+            onBackClick = { onEvent(NewsDetailUIEvent.OnBackClicked) }
         )
         return
     }
 
-    val currentArticle = article!!
+    val isBookmarked = uiState.isBookmarked
 
     // State management
     var textScale by remember { mutableStateOf(1f) }
@@ -125,31 +119,14 @@ fun NewsDetailScreen(
         }
     )
 
-    // Handle AI voice playback simulation & TTS speech
-    LaunchedEffect(isAiVoicePlaying) {
-        if (isAiVoicePlaying) {
-            val fullText = buildString {
-                append("${currentArticle.title}. ")
-                if (currentArticle.description.isNotBlank()) {
-                    append(currentArticle.description)
-                }
-            }
-            ttsPlayer.speak(fullText)
-            playbackProgress = 0f
-
-            val wordCount = fullText.split("\\s+".toRegex()).size
-            val estimatedDurationMs = (wordCount * 300L).coerceIn(4000L, 60000L)
-            val stepTime = estimatedDurationMs / 50
-
-            while (isAiVoicePlaying && playbackProgress < 1f) {
-                delay(stepTime)
-                playbackProgress += 0.02f
-            }
-        } else {
-            ttsPlayer.stop()
-            playbackProgress = 0f
-        }
-    }
+    // Extracted TTS audio playback handling function
+    HandleTextToSpeechPlayback(
+        isAiVoicePlaying = isAiVoicePlaying,
+        title = currentArticle.title,
+        description = currentArticle.description,
+        ttsPlayer = ttsPlayer,
+        onProgressUpdate = { playbackProgress = it }
+    )
 
     Scaffold(
         containerColor = darkBackground
@@ -157,7 +134,7 @@ fun NewsDetailScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                //.padding(paddingValues)
         ) {
             Column(
                 modifier = Modifier
@@ -182,10 +159,7 @@ fun NewsDetailScreen(
                         borderColor = borderColor,
                         neonCyan = neonCyan,
                         textColor = textColor,
-                        isBookmarked = isBookmarked,
-                        onBookmarkClick = onBookmarkClick,
-                        onBackClick = onBackClick,
-                        onShareClick = { onShareClick(currentArticle.title, currentArticle.link) },
+                        onBackClick = { onEvent(NewsDetailUIEvent.OnBackClicked) },
                         onTextScaleDecrease = { if (textScale > 0.8f) textScale -= 0.1f },
                         onTextScaleIncrease = { if (textScale < 1.4f) textScale += 0.1f }
                     )
@@ -206,42 +180,84 @@ fun NewsDetailScreen(
                     DetailHeaderContent(
                         article = currentArticle,
                         textScale = textScale,
-                        isAiVoicePlaying = isAiVoicePlaying,
-                        playbackProgress = playbackProgress,
-                        surfaceGlass = surfaceGlass,
                         neonCyan = neonCyan,
                         neonViolet = neonViolet,
                         textColor = textColor,
-                        subtitleColor = subtitleColor,
+                        subtitleColor = subtitleColor
+                    )
+
+                    // Unified Action Control Center (Listen as Primary CTA)
+                    ActionControlCenter(
+                        articleUrl = currentArticle.link,
+                        articleTitle = currentArticle.title,
+                        isBookmarked = isBookmarked,
+                        isAiVoicePlaying = isAiVoicePlaying,
+                        playbackProgress = playbackProgress,
+                        surfaceGlass = surfaceGlass,
+                        borderColor = borderColor,
+                        neonCyan = neonCyan,
+                        textColor = textColor,
+                        onReadFullNewsClick = { url -> onEvent(NewsDetailUIEvent.OnReadFullNewsClicked(url)) },
                         onListenClick = {
                             isAiVoicePlaying = !isAiVoicePlaying
                             if (!isAiVoicePlaying) {
                                 playbackProgress = 0f
                                 ttsPlayer.stop()
                             }
-                        }
-                    )
-
-                    AiKeyTakeawaysCard(
-                        textScale = textScale,
-                        surfaceGlass = surfaceGlass,
-                        neonCyan = neonCyan,
-                        neonViolet = neonViolet,
-                        textColor = textColor
+                        },
+                        onBookmarkClick = { onEvent(NewsDetailUIEvent.OnBookmarkClicked) },
+                        onShareClick = { title, url -> onEvent(NewsDetailUIEvent.OnShareClicked(title, url)) }
                     )
 
                     ArticleContentBody(
                         article = currentArticle,
                         textScale = textScale,
-                        neonCyan = neonCyan,
                         borderColor = borderColor,
-                        textColor = textColor,
-                        onReadFullNewsClick = onReadFullNewsClick
+                        textColor = textColor
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
+        }
+    }
+}
+
+/**
+ * Handles text-to-speech audio playback simulation in a separate side-effect function.
+ */
+@Composable
+fun HandleTextToSpeechPlayback(
+    isAiVoicePlaying: Boolean,
+    title: String,
+    description: String,
+    ttsPlayer: TextToSpeechPlayer,
+    onProgressUpdate: (Float) -> Unit
+) {
+    LaunchedEffect(isAiVoicePlaying) {
+        if (isAiVoicePlaying) {
+            val fullText = buildString {
+                append("$title. ")
+                if (description.isNotBlank()) {
+                    append(description)
+                }
+            }
+            ttsPlayer.speak(fullText)
+            onProgressUpdate(0f)
+
+            val wordCount = fullText.split("\\s+".toRegex()).size
+            val estimatedDurationMs = (wordCount * 300L).coerceIn(4000L, 60000L)
+            val stepTime = estimatedDurationMs / 50
+            var progress = 0f
+
+            while (isAiVoicePlaying && progress < 1f) {
+                delay(stepTime)
+                progress = (progress + 0.02f).coerceAtMost(1f)
+                onProgressUpdate(progress)
+            }
+        } else {
+            ttsPlayer.stop()
+            onProgressUpdate(0f)
         }
     }
 }
@@ -255,10 +271,7 @@ fun DetailTopBar(
     borderColor: Color,
     neonCyan: Color,
     textColor: Color,
-    isBookmarked: Boolean,
-    onBookmarkClick: () -> Unit,
     onBackClick: () -> Unit,
-    onShareClick: () -> Unit,
     onTextScaleDecrease: () -> Unit,
     onTextScaleIncrease: () -> Unit
 ) {
@@ -300,36 +313,6 @@ fun DetailTopBar(
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
-                }
-            }
-
-            Surface(
-                shape = CircleShape,
-                color = surfaceGlass,
-                border = BorderStroke(1.dp, borderColor)
-            ) {
-                IconButton(onClick = onShareClick, modifier = Modifier.size(36.dp)) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = "Share",
-                        tint = textColor,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-
-            Surface(
-                shape = CircleShape,
-                color = surfaceGlass,
-                border = BorderStroke(1.dp, borderColor)
-            ) {
-                IconButton(onClick = onBookmarkClick, modifier = Modifier.size(36.dp)) {
-                    Icon(
-                        imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Bookmark",
-                        tint = if (isBookmarked) neonCyan else textColor,
-                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -401,14 +384,10 @@ fun DetailHeroSection(imageUrl: String?, title: String, neonViolet: Color, darkB
 fun DetailHeaderContent(
     article: Article,
     textScale: Float,
-    isAiVoicePlaying: Boolean,
-    playbackProgress: Float,
-    surfaceGlass: Color,
     neonCyan: Color,
     neonViolet: Color,
     textColor: Color,
-    subtitleColor: Color,
-    onListenClick: () -> Unit
+    subtitleColor: Color
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -473,96 +452,164 @@ fun DetailHeaderContent(
                     )
                 }
             }
-
-            Surface(
-                onClick = onListenClick,
-                shape = CircleShape,
-                color = if (isAiVoicePlaying) neonCyan.copy(alpha = 0.2f) else surfaceGlass,
-                border = BorderStroke(1.5.dp, if (isAiVoicePlaying) neonCyan else neonViolet),
-                shadowElevation = 6.dp
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Listen AI Voice",
-                        tint = if (isAiVoicePlaying) neonCyan else textColor,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        text = if (isAiVoicePlaying) "Playing ${(playbackProgress * 100).toInt()}%" else "Listen",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (isAiVoicePlaying) neonCyan else textColor,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
         }
     }
 }
 
 @Composable
-fun AiKeyTakeawaysCard(
-    textScale: Float,
+fun ActionControlCenter(
+    articleUrl: String,
+    articleTitle: String,
+    isBookmarked: Boolean,
+    isAiVoicePlaying: Boolean,
+    playbackProgress: Float,
     surfaceGlass: Color,
+    borderColor: Color,
     neonCyan: Color,
-    neonViolet: Color,
-    textColor: Color
+    textColor: Color,
+    onReadFullNewsClick: (String) -> Unit,
+    onListenClick: () -> Unit,
+    onBookmarkClick: () -> Unit,
+    onShareClick: (String, String) -> Unit
 ) {
+    val progressPercentage = (playbackProgress * 100).toInt().coerceIn(0, 100)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = surfaceGlass),
-        border = BorderStroke(1.dp, Brush.linearGradient(listOf(neonCyan, neonViolet)))
+        border = BorderStroke(1.dp, borderColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            // Primary Action CTA: Listen (TTS Audio Player)
+            Button(
+                onClick = onListenClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isAiVoicePlaying) neonCyan.copy(alpha = 0.85f) else neonCyan
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = neonCyan,
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    text = "⚡ AI Key Takeaways",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = neonCyan
-                )
-            }
-
-            val summaryPoints = listOf(
-                "Breakthrough neural-core architecture increases multi-agent processing efficiency by 340%.",
-                "Quantum encryption layer successfully tested against zero-day quantum simulation attacks.",
-                "Commercial deployment slated for Q1 2027 across decentralized cloud grids."
-            )
-
-            summaryPoints.forEach { point ->
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.Top
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 6.dp)
-                            .size(6.dp)
-                            .background(neonViolet, CircleShape)
+                    Icon(
+                        imageVector = if (isAiVoicePlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = "Listen AI Voice",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = point,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = (12.5 * textScale).sp),
-                        color = textColor.copy(alpha = 0.85f),
-                        lineHeight = (18 * textScale).sp
+                        text = if (isAiVoicePlaying) "Playing $progressPercentage%" else "Listen AI Voice",
+                        color = Color.Black,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
+                }
+            }
+
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = borderColor.copy(alpha = 0.5f)
+            )
+
+            // Secondary Quick Actions Row: Read Full News, Bookmark, Share
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Read Full News Action
+                if (articleUrl.isNotBlank()) {
+                    Surface(
+                        onClick = { onReadFullNewsClick(articleUrl) },
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color.Transparent,
+                        border = BorderStroke(1.dp, borderColor)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                tint = neonCyan,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = "Read Full News",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = textColor,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                // Bookmark Action
+                Surface(
+                    onClick = onBookmarkClick,
+                    shape = RoundedCornerShape(16.dp),
+                    color = if (isBookmarked) neonCyan.copy(alpha = 0.2f) else Color.Transparent,
+                    border = BorderStroke(1.dp, if (isBookmarked) neonCyan else borderColor)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = "Bookmark",
+                            tint = if (isBookmarked) neonCyan else textColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = if (isBookmarked) "Bookmarked" else "Bookmark",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (isBookmarked) neonCyan else textColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // Share Action
+                Surface(
+                    onClick = { onShareClick(articleTitle, articleUrl) },
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.Transparent,
+                    border = BorderStroke(1.dp, borderColor)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share",
+                            tint = textColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "Share",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = textColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -573,10 +620,8 @@ fun AiKeyTakeawaysCard(
 fun ArticleContentBody(
     article: Article,
     textScale: Float,
-    neonCyan: Color,
     borderColor: Color,
-    textColor: Color,
-    onReadFullNewsClick: (String) -> Unit
+    textColor: Color
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -610,39 +655,6 @@ fun ArticleContentBody(
                         .border(1.dp, borderColor, RoundedCornerShape(16.dp)),
                     contentScale = ContentScale.Crop
                 )
-            }
-        }
-
-        if (article.link.isNotBlank()) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = { onReadFullNewsClick(article.link) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp),
-                shape = RoundedCornerShape(27.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = neonCyan
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = "⚡ Read Full News",
-                        color = Color.Black,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
         }
     }

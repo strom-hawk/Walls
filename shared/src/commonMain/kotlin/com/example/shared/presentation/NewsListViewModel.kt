@@ -21,8 +21,23 @@ class NewsListViewModel(
     private val _uiState = MutableStateFlow<NewsUiState>(NewsUiState.Loading)
     val uiState: StateFlow<NewsUiState> = _uiState.asStateFlow()
 
+    private val _categories = MutableStateFlow(listOf("All"))
+    val categories: StateFlow<List<String>> = _categories.asStateFlow()
+
+    private val _selectedCategory = MutableStateFlow("All")
+    val selectedCategory: StateFlow<String> = _selectedCategory.asStateFlow()
+
     init {
         fetchNews()
+    }
+
+    fun selectCategory(category: String) {
+        _selectedCategory.value = category
+    }
+
+    private fun updateCategories(articles: List<Article>) {
+        val extracted = listOf("All") + articles.mapNotNull { it.category }.distinct().filter { it.isNotBlank() }
+        _categories.value = extracted
     }
 
     fun fetchNews() {
@@ -34,12 +49,14 @@ class NewsListViewModel(
                 val allCached = loadCachedNews()
                 val displayList = if (allCached.isNotEmpty()) allCached else articles
                 GetNewsUseCase.setCachedArticles(displayList)
+                updateCategories(displayList)
                 _uiState.value = NewsUiState.Success(displayList)
             } catch (e: Exception) {
                 try {
                     val cached = loadCachedNews()
                     if (cached.isNotEmpty()) {
                         GetNewsUseCase.setCachedArticles(cached)
+                        updateCategories(cached)
                         _uiState.value = NewsUiState.Success(cached)
                     } else {
                         _uiState.value = NewsUiState.Error(e.message ?: "Unknown error")

@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -37,21 +36,33 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.shared.domain.model.Avatar
 import com.example.shared.domain.usecase.GetProfileOptionsUseCase
 import com.example.shared.ui.theme.ThemeManager
 
 /**
  * User Profile Screen displaying user information, profile settings/options, and app version.
  *
+ * @param userName Current user name displayed in header card.
+ * @param userEmail Current user email displayed in header card.
+ * @param avatarId Current avatar identifier.
+ * @param onHeaderClick Callback when user header card is tapped.
  * @param onItemClick Callback invoked when a profile option item is tapped.
  * @param onThemeClick Callback invoked when the Theme option is tapped.
+ * @param onBookmarkedNewsClick Callback invoked when Bookmarked news is tapped.
+ * @param onContactUsClick Callback invoked when Contact us is tapped.
  * @param getProfileOptionsUseCase Use case providing the list of profile option items.
  */
 @Composable
 fun ProfileScreen(
+    userName: String = "Samachar Reader",
+    userEmail: String = "reader@samachar.ai",
+    avatarId: String = "default",
+    onHeaderClick: () -> Unit = {},
     onItemClick: (String) -> Unit,
     onThemeClick: () -> Unit = {},
     onBookmarkedNewsClick: () -> Unit = {},
+    onContactUsClick: () -> Unit = {},
     getProfileOptionsUseCase: GetProfileOptionsUseCase = remember { GetProfileOptionsUseCase() }
 ) {
     val options = remember(getProfileOptionsUseCase) { getProfileOptionsUseCase() }
@@ -92,49 +103,17 @@ fun ProfileScreen(
                 )
 
                 // User Header Card
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = surfaceGlass,
-                    border = BorderStroke(1.dp, borderColor),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = neonViolet.copy(alpha = 0.25f),
-                            border = BorderStroke(1.5.dp, neonCyan),
-                            modifier = Modifier.size(56.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = neonCyan,
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
-                        }
-
-                        Column {
-                            Text(
-                                text = "Samachar Reader",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = textColor
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "reader@samachar.ai",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = neonCyan
-                            )
-                        }
-                    }
-                }
+                UserHeaderCard(
+                    userName = userName,
+                    userEmail = userEmail,
+                    avatarId = avatarId,
+                    surfaceGlass = surfaceGlass,
+                    borderColor = borderColor,
+                    neonViolet = neonViolet,
+                    neonCyan = neonCyan,
+                    textColor = textColor,
+                    onClick = onHeaderClick
+                )
             }
 
             // Options List (takes remaining space)
@@ -157,6 +136,8 @@ fun ProfileScreen(
                                 onThemeClick()
                             } else if (item.title == "Bookmarked news") {
                                 onBookmarkedNewsClick()
+                            } else if (item.title == "Contact us") {
+                                onContactUsClick()
                             } else {
                                 onItemClick(item.title)
                             }
@@ -179,6 +160,87 @@ fun ProfileScreen(
                     fontWeight = FontWeight.Medium
                 )
             }
+        }
+    }
+}
+
+/**
+ * User Header Card displaying avatar, name, and email. Clickable to navigate to Edit Profile.
+ *
+ * @param userName Display name.
+ * @param userEmail Email address.
+ * @param avatarId Selected avatar identifier.
+ * @param surfaceGlass Surface color.
+ * @param borderColor Border color.
+ * @param neonViolet Accent color.
+ * @param neonCyan Accent color.
+ * @param textColor Text color.
+ * @param onClick Callback when tapped.
+ */
+@Composable
+fun UserHeaderCard(
+    userName: String,
+    userEmail: String,
+    avatarId: String,
+    surfaceGlass: Color,
+    borderColor: Color,
+    neonViolet: Color,
+    neonCyan: Color,
+    textColor: Color,
+    onClick: () -> Unit
+) {
+    val avatar = Avatar.fromId(avatarId)
+
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = surfaceGlass,
+        border = BorderStroke(1.dp, borderColor),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = neonViolet.copy(alpha = 0.25f),
+                border = BorderStroke(1.5.dp, neonCyan),
+                modifier = Modifier.size(56.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = avatar.icon,
+                        contentDescription = null,
+                        tint = neonCyan,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = userName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = textColor
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = userEmail,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = neonCyan
+                )
+            }
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = textColor.copy(alpha = 0.6f),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

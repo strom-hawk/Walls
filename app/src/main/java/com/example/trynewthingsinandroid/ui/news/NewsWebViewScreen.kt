@@ -21,11 +21,11 @@ import com.example.shared.ui.theme.DarkBackground
 import com.example.shared.ui.theme.NeonCyan
 import com.example.shared.ui.theme.SurfaceGlass
 import com.example.shared.ui.theme.BorderColor
-import com.example.trynewthingsinandroid.ui.theme.Spacing1
-import com.example.trynewthingsinandroid.ui.theme.Spacing3
-import com.example.trynewthingsinandroid.ui.theme.Spacing12
-import com.example.trynewthingsinandroid.ui.theme.Spacing16
-import com.example.trynewthingsinandroid.ui.theme.Spacing220
+import com.example.shared.ui.theme.Spacing1
+import com.example.shared.ui.theme.Spacing3
+import com.example.shared.ui.theme.Spacing12
+import com.example.shared.ui.theme.Spacing16
+import com.example.shared.ui.theme.Spacing220
 
 /**
  * A composable screen that displays full news articles by loading source URLs in a native Android [WebView].

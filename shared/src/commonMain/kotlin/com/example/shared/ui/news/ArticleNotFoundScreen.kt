@@ -37,6 +37,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.shared.ui.theme.ThemeManager
+import com.example.shared.ui.theme.Spacing1
+import com.example.shared.ui.theme.Spacing8
+import com.example.shared.ui.theme.Spacing12
+import com.example.shared.ui.theme.Spacing16
+import com.example.shared.ui.theme.Spacing24
+import com.example.shared.ui.theme.Spacing28
+import com.example.shared.ui.theme.Spacing50
+import com.example.shared.ui.theme.Spacing72
 
 /**
  * Reusable empty state screen for when an article is not found or expired.
@@ -71,14 +79,14 @@ fun ArticleNotFoundScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = Spacing16, vertical = Spacing12),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing16)
             ) {
                 Surface(
                     shape = CircleShape,
                     color = surfaceGlass,
-                    border = BorderStroke(1.dp, borderColor)
+                    border = BorderStroke(Spacing1, borderColor)
                 ) {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -103,28 +111,28 @@ fun ArticleNotFoundScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(24.dp),
+                .padding(Spacing24),
             contentAlignment = Alignment.Center
         ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = surfaceGlass),
-                border = BorderStroke(1.dp, borderColor),
+                border = BorderStroke(Spacing1, borderColor),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(28.dp),
+                        .padding(Spacing28),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(Spacing16)
                 ) {
                     Surface(
                         shape = CircleShape,
                         color = Color(0xFFFF5252).copy(alpha = 0.15f),
                         border = BorderStroke(1.5.dp, Color(0xFFFF5252)),
-                        modifier = Modifier.size(72.dp)
+                        modifier = Modifier.size(Spacing72)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
@@ -152,13 +160,13 @@ fun ArticleNotFoundScreen(
                         lineHeight = 20.sp
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(Spacing8))
 
                     Button(
                         onClick = onCtaClick,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
+                            .height(Spacing50),
                         shape = RoundedCornerShape(25.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = neonCyan),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
