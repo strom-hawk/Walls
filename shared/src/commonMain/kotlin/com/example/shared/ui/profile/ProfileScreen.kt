@@ -21,22 +21,32 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.shared.domain.model.Avatar
+import com.example.shared.domain.model.StreakInfo
 import com.example.shared.domain.usecase.GetProfileOptionsUseCase
 import com.example.shared.ui.theme.ThemeManager
 
@@ -46,6 +56,7 @@ import com.example.shared.ui.theme.ThemeManager
  * @param userName Current user name displayed in header card.
  * @param userEmail Current user email displayed in header card.
  * @param avatarId Current avatar identifier.
+ * @param streakInfo User reading streak and star rank metrics.
  * @param onHeaderClick Callback when user header card is tapped.
  * @param onItemClick Callback invoked when a profile option item is tapped.
  * @param onThemeClick Callback invoked when the Theme option is tapped.
@@ -58,6 +69,7 @@ fun ProfileScreen(
     userName: String = "Samachar Reader",
     userEmail: String = "reader@samachar.ai",
     avatarId: String = "default",
+    streakInfo: StreakInfo = StreakInfo(),
     onHeaderClick: () -> Unit = {},
     onItemClick: (String) -> Unit,
     onThemeClick: () -> Unit = {},
@@ -80,102 +92,120 @@ fun ProfileScreen(
         containerColor = darkBackground,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .statusBarsPadding()
+                .drawBehind {
+                    // Header radial gradient glow
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(neonCyan.copy(alpha = 0.15f), Color.Transparent),
+                            center = Offset(size.width / 2, 0f),
+                            radius = size.width * 0.8f
+                        ),
+                        radius = size.width * 0.8f
+                    )
+                }
         ) {
-            // Header
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxSize()
+                    .statusBarsPadding()
             ) {
-                Text(
-                    text = "PROFILE",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = textColor,
-                        letterSpacing = 1.5.sp
+                // Header
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "PROFILE",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = textColor,
+                            letterSpacing = 1.5.sp
+                        )
                     )
-                )
 
-                // User Header Card
-                UserHeaderCard(
-                    userName = userName,
-                    userEmail = userEmail,
-                    avatarId = avatarId,
-                    surfaceGlass = surfaceGlass,
-                    borderColor = borderColor,
-                    neonViolet = neonViolet,
-                    neonCyan = neonCyan,
-                    textColor = textColor,
-                    onClick = onHeaderClick
-                )
-            }
+                    // User Header Card
+                    UserHeaderCard(
+                        userName = userName,
+                        userEmail = userEmail,
+                        avatarId = avatarId,
+                        surfaceGlass = surfaceGlass,
+                        borderColor = borderColor,
+                        neonViolet = neonViolet,
+                        neonCyan = neonCyan,
+                        textColor = textColor,
+                        subtitleColor = subtitleColor,
+                        onClick = onHeaderClick
+                    )
 
-            // Options List (takes remaining space)
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(options) { item ->
-                    ProfileOptionCard(
-                        item = item,
+                    // Quick Stats Row with real streak data
+                    ProfileStatsRow(
+                        streakInfo = streakInfo,
                         surfaceGlass = surfaceGlass,
                         borderColor = borderColor,
                         neonCyan = neonCyan,
                         textColor = textColor,
-                        onClick = {
-                            if (item.title == "Theme") {
-                                onThemeClick()
-                            } else if (item.title == "Bookmarked news") {
-                                onBookmarkedNewsClick()
-                            } else if (item.title == "Contact us") {
-                                onContactUsClick()
-                            } else {
-                                onItemClick(item.title)
-                            }
-                        }
+                        subtitleColor = subtitleColor
                     )
                 }
-            }
 
-            // Version anchored at the very bottom
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Version 1.0.0",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = subtitleColor,
-                    fontWeight = FontWeight.Medium
-                )
+                // Options List (takes remaining space)
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(options) { item ->
+                        ProfileOptionCard(
+                            item = item,
+                            surfaceGlass = surfaceGlass,
+                            borderColor = borderColor,
+                            neonCyan = neonCyan,
+                            neonViolet = neonViolet,
+                            textColor = textColor,
+                            onClick = {
+                                if (item.title == "Theme") {
+                                    onThemeClick()
+                                } else if (item.title == "Bookmarked news") {
+                                    onBookmarkedNewsClick()
+                                } else if (item.title == "Contact us") {
+                                    onContactUsClick()
+                                } else {
+                                    onItemClick(item.title)
+                                }
+                            }
+                        )
+                    }
+                }
+
+                // Version anchored at the very bottom
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Version 1.0.0",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = subtitleColor,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }
 }
 
 /**
- * User Header Card displaying avatar, name, and email. Clickable to navigate to Edit Profile.
- *
- * @param userName Display name.
- * @param userEmail Email address.
- * @param avatarId Selected avatar identifier.
- * @param surfaceGlass Surface color.
- * @param borderColor Border color.
- * @param neonViolet Accent color.
- * @param neonCyan Accent color.
- * @param textColor Text color.
- * @param onClick Callback when tapped.
+ * User Header Card displaying avatar, name, email, pro badge, and edit prompt.
  */
 @Composable
 fun UserHeaderCard(
@@ -187,69 +217,207 @@ fun UserHeaderCard(
     neonViolet: Color,
     neonCyan: Color,
     textColor: Color,
+    subtitleColor: Color,
     onClick: () -> Unit
 ) {
     val avatar = Avatar.fromId(avatarId)
 
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = surfaceGlass,
-        border = BorderStroke(1.dp, borderColor),
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = surfaceGlass),
+        border = BorderStroke(1.5.dp, Brush.linearGradient(listOf(neonCyan, neonViolet))),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Surface(
-                shape = CircleShape,
-                color = neonViolet.copy(alpha = 0.25f),
-                border = BorderStroke(1.5.dp, neonCyan),
-                modifier = Modifier.size(56.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = avatar.icon,
-                        contentDescription = null,
-                        tint = neonCyan,
-                        modifier = Modifier.size(32.dp)
+                Surface(
+                    shape = CircleShape,
+                    color = neonViolet.copy(alpha = 0.25f),
+                    border = BorderStroke(2.dp, neonCyan),
+                    modifier = Modifier.size(60.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = avatar.icon,
+                            contentDescription = null,
+                            tint = neonCyan,
+                            modifier = Modifier.size(34.dp)
+                        )
+                    }
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = userName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = textColor
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = neonCyan.copy(alpha = 0.2f),
+                            border = BorderStroke(1.dp, neonCyan.copy(alpha = 0.6f))
+                        ) {
+                            Text(
+                                text = "⚡ PRO",
+                                color = neonCyan,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = userEmail,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = subtitleColor
                     )
                 }
             }
 
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = userName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = textColor
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = userEmail,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = neonCyan
-                )
-            }
-
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = textColor.copy(alpha = 0.6f),
-                modifier = Modifier.size(20.dp)
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = borderColor.copy(alpha = 0.4f)
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Tap to edit profile & avatar",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = neonCyan,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Surface(
+                    shape = CircleShape,
+                    color = neonCyan.copy(alpha = 0.15f),
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit Profile",
+                            tint = neonCyan,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 /**
- * Card item representing an individual profile option.
- *
- * @param item The profile option data containing title and icon.
- * @param onClick Callback when the card is clicked.
+ * Quick stats summary bar showing real reading streak, star level, and title.
+ */
+@Composable
+fun ProfileStatsRow(
+    streakInfo: StreakInfo,
+    surfaceGlass: Color,
+    borderColor: Color,
+    neonCyan: Color,
+    textColor: Color,
+    subtitleColor: Color
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = surfaceGlass),
+        border = BorderStroke(1.dp, borderColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            StatItem(
+                icon = Icons.Default.LocalFireDepartment,
+                value = "${streakInfo.streakCount} Days",
+                label = "Reading Streak",
+                neonCyan = neonCyan,
+                textColor = textColor,
+                subtitleColor = subtitleColor
+            )
+            VerticalDivider(modifier = Modifier.height(28.dp), color = borderColor.copy(alpha = 0.5f))
+            StatItem(
+                icon = Icons.Default.Star,
+                value = "Level ${streakInfo.starRating}",
+                label = streakInfo.readerTitle,
+                neonCyan = neonCyan,
+                textColor = textColor,
+                subtitleColor = subtitleColor
+            )
+            VerticalDivider(modifier = Modifier.height(28.dp), color = borderColor.copy(alpha = 0.5f))
+            StatItem(
+                icon = Icons.Default.Person,
+                value = "Active",
+                label = "AI Voice Synced",
+                neonCyan = neonCyan,
+                textColor = textColor,
+                subtitleColor = subtitleColor
+            )
+        }
+    }
+}
+
+@Composable
+fun StatItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    value: String,
+    label: String,
+    neonCyan: Color,
+    textColor: Color,
+    subtitleColor: Color
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = neonCyan,
+            modifier = Modifier.size(18.dp)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = subtitleColor
+        )
+    }
+}
+
+/**
+ * Card item representing an individual profile option with gradient border and glowing icon badge.
  */
 @Composable
 fun ProfileOptionCard(
@@ -257,6 +425,7 @@ fun ProfileOptionCard(
     surfaceGlass: Color,
     borderColor: Color,
     neonCyan: Color,
+    neonViolet: Color,
     textColor: Color,
     onClick: () -> Unit
 ) {
@@ -264,9 +433,10 @@ fun ProfileOptionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = surfaceGlass),
-        border = BorderStroke(1.dp, borderColor)
+        border = BorderStroke(1.dp, Brush.linearGradient(listOf(neonCyan, neonViolet.copy(alpha = 0.5f)))),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
             modifier = Modifier
@@ -282,7 +452,8 @@ fun ProfileOptionCard(
                 Surface(
                     shape = CircleShape,
                     color = neonCyan.copy(alpha = 0.15f),
-                    modifier = Modifier.size(38.dp)
+                    border = BorderStroke(1.dp, neonCyan.copy(alpha = 0.5f)),
+                    modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -302,12 +473,21 @@ fun ProfileOptionCard(
                 )
             }
 
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = textColor.copy(alpha = 0.6f),
-                modifier = Modifier.size(20.dp)
-            )
+            Surface(
+                shape = CircleShape,
+                color = surfaceGlass,
+                border = BorderStroke(1.dp, borderColor.copy(alpha = 0.5f)),
+                modifier = Modifier.size(28.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = textColor.copy(alpha = 0.7f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
         }
     }
 }

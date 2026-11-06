@@ -1,6 +1,5 @@
 package com.example.shared.ui.news
 
-import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -16,6 +15,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.shared.domain.model.Article
+import com.example.shared.domain.model.StreakInfo
 import com.example.shared.presentation.NewsUiState
 import com.example.shared.presentation.NewsListViewModel
 import com.example.shared.ui.theme.ThemeManager
@@ -33,11 +35,13 @@ import com.example.shared.ui.theme.ThemeManager
  * and interactive article card feeds.
  *
  * @param viewModel The ViewModel providing news feed state and fetch operations.
+ * @param streakInfo User reading streak metrics.
  * @param onArticleClick Callback invoked when an article card is tapped, passing its unique articleId.
  */
 @Composable
 fun NewsListScreen(
     viewModel: NewsListViewModel = remember { NewsListViewModel() },
+    streakInfo: StreakInfo = StreakInfo(),
     onArticleClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -46,10 +50,12 @@ fun NewsListScreen(
 
     // Interactive states
     var searchQuery by remember { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
 
     // Dynamic Theme Colors
     val currentTheme = ThemeManager.currentTheme
     val neonCyan = currentTheme.accentColor
+    val neonViolet = currentTheme.accentColor.copy(alpha = 0.7f)
     val darkBackground = currentTheme.backgroundColor
     val surfaceGlass = currentTheme.cardColor
     val borderColor = currentTheme.accentColor.copy(alpha = 0.3f)
@@ -74,71 +80,104 @@ fun NewsListScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    if (isSearchActive) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = { Text("Search articles...", color = subtitleColor) },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = neonCyan) },
+                            trailingIcon = {
+                                IconButton(onClick = {
+                                    searchQuery = ""
+                                    isSearchActive = false
+                                }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Close", tint = subtitleColor)
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = surfaceGlass,
+                                unfocusedContainerColor = surfaceGlass,
+                                focusedBorderColor = neonCyan,
+                                unfocusedBorderColor = borderColor,
+                                focusedTextColor = textColor,
+                                unfocusedTextColor = textColor
+                            ),
+                            singleLine = true
+                        )
+                    } else {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = neonCyan.copy(alpha = 0.2f),
+                                border = BorderStroke(1.dp, neonCyan)
+                            ) {
+                                Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Default.Star, contentDescription = null, tint = neonCyan, modifier = Modifier.size(20.dp))
+                                }
+                            }
+                            Text(
+                                text = "SAMACHAR",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = textColor,
+                                    letterSpacing = 1.5.sp
+                                )
+                            )
+                        }
+                    }
+
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = neonCyan.copy(alpha = 0.2f),
-                            border = BorderStroke(1.dp, neonCyan)
-                        ) {
-                            Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
-                                Icon(Icons.Default.Star, contentDescription = null, tint = neonCyan, modifier = Modifier.size(20.dp))
+                        if (!isSearchActive) {
+                            Surface(
+                                shape = CircleShape,
+                                color = surfaceGlass,
+                                border = BorderStroke(1.dp, borderColor)
+                            ) {
+                                IconButton(onClick = { isSearchActive = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Search",
+                                        tint = neonCyan
+                                    )
+                                }
                             }
                         }
-                        Text(
-                            text = "SAMACHAR",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = textColor,
-                                letterSpacing = 1.5.sp
-                            )
-                        )
-                    }
 
-                    // Profile / Status Indicator
-                    Surface(
-                        shape = CircleShape,
-                        color = surfaceGlass,
-                        border = BorderStroke(1.dp, borderColor)
-                    ) {
-                        IconButton(onClick = { viewModel.fetchNews() }) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Refresh Feed",
-                                tint = neonCyan
-                            )
+                        Surface(
+                            shape = CircleShape,
+                            color = surfaceGlass,
+                            border = BorderStroke(1.dp, borderColor)
+                        ) {
+                            IconButton(onClick = { viewModel.fetchNews() }) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Refresh Feed",
+                                    tint = neonCyan
+                                )
+                            }
                         }
                     }
                 }
 
-                // Interactive Search Bar
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search Samachar articles...", color = subtitleColor) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = neonCyan) },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear", tint = subtitleColor)
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(54.dp),
-                    shape = RoundedCornerShape(27.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = surfaceGlass,
-                        unfocusedContainerColor = surfaceGlass,
-                        focusedBorderColor = neonCyan,
-                        unfocusedBorderColor = borderColor,
-                        focusedTextColor = textColor,
-                        unfocusedTextColor = textColor
-                    ),
-                    singleLine = true
+                // Gamified Streak Dashboard Widget (Replaces old search bar)
+                StreakDashboardWidget(
+                    streakInfo = streakInfo,
+                    surfaceGlass = surfaceGlass,
+                    borderColor = borderColor,
+                    neonCyan = neonCyan,
+                    neonViolet = neonViolet,
+                    textColor = textColor,
+                    subtitleColor = subtitleColor
                 )
 
                 // Category Filter Chips
@@ -251,6 +290,107 @@ fun NewsListScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Gamified Streak Dashboard Widget displaying pulse flame animation, streak count, and star rank.
+ */
+@Composable
+fun StreakDashboardWidget(
+    streakInfo: StreakInfo,
+    surfaceGlass: Color,
+    borderColor: Color,
+    neonCyan: Color,
+    neonViolet: Color,
+    textColor: Color,
+    subtitleColor: Color
+) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = surfaceGlass),
+        border = BorderStroke(1.5.dp, Brush.linearGradient(listOf(neonCyan, neonViolet))),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = neonCyan.copy(alpha = 0.2f),
+                    border = BorderStroke(1.5.dp, neonCyan),
+                    modifier = Modifier
+                        .size(48.dp)
+                        .scale(scale)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.LocalFireDepartment,
+                            contentDescription = "Streak",
+                            tint = neonCyan,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = "🔥 ${streakInfo.streakCount} Day Reading Streak",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = textColor
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        repeat(streakInfo.starRating) {
+                            Text("⭐", fontSize = 12.sp)
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = streakInfo.readerTitle,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = neonCyan
+                        )
+                    }
+                }
+            }
+
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = neonCyan.copy(alpha = 0.15f),
+                border = BorderStroke(1.dp, neonCyan.copy(alpha = 0.5f))
+            ) {
+                Text(
+                    text = "Active Daily",
+                    color = neonCyan,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                )
             }
         }
     }

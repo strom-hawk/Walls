@@ -46,6 +46,7 @@ import com.example.shared.ui.theme.ThemeManager
 import com.example.shared.ui.theme.ThemesScreen
 import com.example.trynewthingsinandroid.R
 import com.example.trynewthingsinandroid.data.local.NewsCacheManager
+import com.example.trynewthingsinandroid.data.local.StreakPreferences
 import com.example.trynewthingsinandroid.data.local.UserProfilePreferences
 import com.example.trynewthingsinandroid.ui.news.BookmarkedNewsScreen
 import com.example.trynewthingsinandroid.ui.news.NewsWebViewScreen
@@ -145,6 +146,8 @@ fun AppNavHost(
             composable(Screen.NewsList.route) {
                 val context = LocalContext.current
                 val cacheManager = remember { NewsCacheManager(context) }
+                val streakPrefs = remember { StreakPreferences(context) }
+                val streakInfo = remember { streakPrefs.getStreakInfo() }
                 val viewModel = remember {
                     NewsListViewModel(
                         loadCachedNews = { cacheManager.getCachedNews() },
@@ -153,6 +156,7 @@ fun AppNavHost(
                 }
                 NewsListScreen(
                     viewModel = viewModel,
+                    streakInfo = streakInfo,
                     onArticleClick = { articleId ->
                         navController.navigate(Screen.NewsDetail.createRoute(articleId))
                     }
@@ -161,6 +165,8 @@ fun AppNavHost(
             composable(Screen.Profile.route) {
                 val context = LocalContext.current
                 val profilePrefs = remember { UserProfilePreferences(context) }
+                val streakPrefs = remember { StreakPreferences(context) }
+                val streakInfo = remember { streakPrefs.getStreakInfo() }
                 var userName by remember { mutableStateOf(profilePrefs.getUserName()) }
                 var userEmail by remember { mutableStateOf(profilePrefs.getUserEmail()) }
                 var avatarId by remember { mutableStateOf(profilePrefs.getAvatarId()) }
@@ -175,6 +181,7 @@ fun AppNavHost(
                     userName = userName,
                     userEmail = userEmail,
                     avatarId = avatarId,
+                    streakInfo = streakInfo,
                     onHeaderClick = {
                         navController.navigate(Screen.EditProfile.route)
                     },
