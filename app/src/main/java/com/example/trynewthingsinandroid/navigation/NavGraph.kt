@@ -1,6 +1,5 @@
 package com.example.trynewthingsinandroid.navigation
 
-import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -42,7 +41,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.shared.presentation.NewsListViewModel
 import com.example.shared.ui.news.NewsListScreen
-import com.example.shared.ui.profile.ContactUsScreen
 import com.example.shared.ui.profile.ProfileScreen
 import com.example.shared.ui.theme.ThemeManager
 import com.example.shared.ui.theme.ThemesScreen
@@ -213,24 +211,7 @@ fun AppNavHost(
                 )
             }
             composable(Screen.ContactUs.route) {
-                val context = LocalContext.current
-                ContactUsScreen(
-                    onBackClick = {
-                        navController.popBackStack()
-                    },
-                    onEmailClick = { email, subject, message ->
-                        val intent = Intent(Intent.ACTION_SENDTO).apply {
-                            data = android.net.Uri.parse("mailto:$email")
-                            putExtra(Intent.EXTRA_SUBJECT, subject)
-                            putExtra(Intent.EXTRA_TEXT, message)
-                        }
-                        try {
-                            context.startActivity(intent)
-                        } catch (_: Exception) {
-                            Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                )
+                ContactUsDestination(navController = navController)
             }
             composable(Screen.EditProfile.route) {
                 EditProfileDestination(navController = navController)

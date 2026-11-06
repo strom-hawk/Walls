@@ -37,18 +37,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.shared.presentation.ContactUsScreenUIEvent
+import com.example.shared.presentation.ContactUsUiState
 import com.example.shared.ui.theme.*
 
 /**
- * Contact Us screen displaying support details and email contact information.
+ * Contact Us screen displaying support details and email contact information using MVI.
  *
- * @param onBackClick Callback when the toolbar back button is clicked.
- * @param onEmailClick Callback when clicking the email address.
+ * @param uiState State containing support email and defaults.
+ * @param onEvent Callback dispatching user UI events.
  */
 @Composable
 fun ContactUsScreen(
-    onBackClick: () -> Unit,
-    onEmailClick: (String, String, String) -> Unit
+    uiState: ContactUsUiState,
+    onEvent: (ContactUsScreenUIEvent) -> Unit
 ) {
     val currentTheme = ThemeManager.currentTheme
     val darkBackground = currentTheme.backgroundColor
@@ -75,7 +77,7 @@ fun ContactUsScreen(
                     color = surfaceGlass,
                     border = BorderStroke(Spacing1, borderColor)
                 ) {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = { onEvent(ContactUsScreenUIEvent.OnBackClicked) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -138,7 +140,9 @@ fun ContactUsScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onEmailClick("sauravsumanxs@gmail.com", "Samachar Feedback", "") },
+                    .clickable {
+                        onEvent(ContactUsScreenUIEvent.OnEmailClicked(uiState.supportEmail, uiState.defaultSubject, uiState.defaultMessage))
+                    },
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = surfaceGlass),
                 border = BorderStroke(1.dp, borderColor),
@@ -157,7 +161,7 @@ fun ContactUsScreen(
                         color = subtitleColor
                     )
                     Text(
-                        text = "sauravsumanxs@gmail.com",
+                        text = uiState.supportEmail,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = neonCyan

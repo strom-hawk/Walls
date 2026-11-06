@@ -17,4 +17,8 @@
     <string name="playing_progress">Playing %d%%</string>
     <string name="read_full_news">⚡ Read Full News</string>
     <string name="article_illustration">Article Illustration</string>
+
+    <!-- Contact Us -->
+    <string name="contact_us_mail_prompt">Kindly mail us directly at</string>
+    <string name="no_email_app_found">No email app found</string>
 </resources>
