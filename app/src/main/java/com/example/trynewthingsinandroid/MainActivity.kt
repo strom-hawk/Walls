@@ -10,8 +10,10 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.shared.ui.theme.SamacharTheme
 import com.example.shared.ui.theme.ThemeManager
+import com.example.trynewthingsinandroid.data.local.StreakPreferences
 import com.example.trynewthingsinandroid.data.local.ThemePreferences
 import com.example.trynewthingsinandroid.navigation.AppNavHost
+import com.example.trynewthingsinandroid.worker.StreakWorker
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,6 +26,11 @@ class MainActivity : ComponentActivity() {
         ThemeManager.onThemeChanged = { themeId ->
             themePreferences.saveThemeId(themeId)
         }
+
+        // Record daily app open for reading streak & schedule 11 AM notification
+        val streakPrefs = StreakPreferences(applicationContext)
+        streakPrefs.recordAppOpen()
+        StreakWorker.scheduleDailyNotification(applicationContext)
 
         enableEdgeToEdge()
         setContent {
